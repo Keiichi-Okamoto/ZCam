@@ -34,6 +34,7 @@
 		0C9121E52FA1A0D500B0B36F /* ZCamUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZCamUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C9121FA2FA1A20700B0B36F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		0C9121FC2FA1A23100B0B36F /* FEATURES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FEATURES.md; sourceTree = "<group>"; };
+		2AEF5E4C30C62DBC2465535F /* simulator_dummy.jpg */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.jpeg; path = simulator_dummy.jpg; sourceTree = "<group>"; };
 		E06CF4BA95837E051CDA058E /* CLAUDE.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
 		EA5CE50D6F5DC242B017055C /* .gitignore */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -41,16 +42,22 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0C9121D02FA1A0D400B0B36F /* ZCam */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCam;
 			sourceTree = "<group>";
 		};
 		0C9121DE2FA1A0D500B0B36F /* ZCamTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCamTests;
 			sourceTree = "<group>";
 		};
 		0C9121E82FA1A0D500B0B36F /* ZCamUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCamUITests;
 			sourceTree = "<group>";
 		};
@@ -92,6 +99,7 @@
 				0C9121DE2FA1A0D500B0B36F /* ZCamTests */,
 				0C9121E82FA1A0D500B0B36F /* ZCamUITests */,
 				0C9121CF2FA1A0D400B0B36F /* Products */,
+				3427E930FB7A1283A2B0D7F3 /* Resource */,
 			);
 			sourceTree = "<group>";
 		};
@@ -103,6 +111,23 @@
 				0C9121E52FA1A0D500B0B36F /* ZCamUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		3427E930FB7A1283A2B0D7F3 /* Resource */ = {
+			isa = PBXGroup;
+			children = (
+				60C662A5C762AFE5C950CE26 /* image */,
+			);
+			name = Resource;
+			sourceTree = "<group>";
+		};
+		60C662A5C762AFE5C950CE26 /* image */ = {
+			isa = PBXGroup;
+			children = (
+				2AEF5E4C30C62DBC2465535F /* simulator_dummy.jpg */,
+			);
+			name = image;
+			path = Resource/image;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
