@@ -34,6 +34,7 @@
 		0C9121E52FA1A0D500B0B36F /* ZCamUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZCamUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C9121FA2FA1A20700B0B36F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		0C9121FC2FA1A23100B0B36F /* FEATURES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FEATURES.md; sourceTree = "<group>"; };
+		E06CF4BA95837E051CDA058E /* CLAUDE.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
 		EA5CE50D6F5DC242B017055C /* .gitignore */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -85,6 +86,7 @@
 			children = (
 				0C9121FA2FA1A20700B0B36F /* README.md */,
 				0C9121FC2FA1A23100B0B36F /* FEATURES.md */,
+				E06CF4BA95837E051CDA058E /* CLAUDE.md */,
 				EA5CE50D6F5DC242B017055C /* .gitignore */,
 				0C9121D02FA1A0D400B0B36F /* ZCam */,
 				0C9121DE2FA1A0D500B0B36F /* ZCamTests */,
