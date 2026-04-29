@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C85EA012FA22695008C6B7B /* SwiftLintFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 0C85EA002FA22695008C6B7B /* SwiftLintFramework */; };
+		0C85EA032FA22695008C6B7B /* swiftlint in Frameworks */ = {isa = PBXBuildFile; productRef = 0C85EA022FA22695008C6B7B /* swiftlint */; };
+		0C85EA062FA226E1008C6B7B /* SwiftLintFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 0C85EA052FA226E1008C6B7B /* SwiftLintFramework */; };
+		0C85EA082FA226E1008C6B7B /* swiftlint in Frameworks */ = {isa = PBXBuildFile; productRef = 0C85EA072FA226E1008C6B7B /* swiftlint */; };
 		0C9121FB2FA1A20700B0B36F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 0C9121FA2FA1A20700B0B36F /* README.md */; };
 		0C9121FD2FA1A23100B0B36F /* FEATURES.md in Resources */ = {isa = PBXBuildFile; fileRef = 0C9121FC2FA1A23100B0B36F /* FEATURES.md */; };
 /* End PBXBuildFile section */
@@ -42,16 +46,22 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0C9121D02FA1A0D400B0B36F /* ZCam */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCam;
 			sourceTree = "<group>";
 		};
 		0C9121DE2FA1A0D500B0B36F /* ZCamTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCamTests;
 			sourceTree = "<group>";
 		};
 		0C9121E82FA1A0D500B0B36F /* ZCamUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCamUITests;
 			sourceTree = "<group>";
 		};
@@ -62,6 +72,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0C85EA012FA22695008C6B7B /* SwiftLintFramework in Frameworks */,
+				0C85EA082FA226E1008C6B7B /* swiftlint in Frameworks */,
+				0C85EA032FA22695008C6B7B /* swiftlint in Frameworks */,
+				0C85EA062FA226E1008C6B7B /* SwiftLintFramework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +145,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0C9121EF2FA1A0D500B0B36F /* Build configuration list for PBXNativeTarget "ZCam" */;
 			buildPhases = (
+				95ACCD0AEDFDB7CE13EA804D /* SwiftLint */,
 				0C9121CA2FA1A0D400B0B36F /* Sources */,
 				0C9121CB2FA1A0D400B0B36F /* Frameworks */,
 				0C9121CC2FA1A0D400B0B36F /* Resources */,
@@ -221,6 +236,9 @@
 			);
 			mainGroup = 0C9121C52FA1A0D400B0B36F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0C85EA042FA226E1008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0C9121CF2FA1A0D400B0B36F /* Products */;
 			projectDirPath = "";
@@ -258,6 +276,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		95ACCD0AEDFDB7CE13EA804D /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${BUILD_DIR%Build/*}SourcePackages/checkouts/SwiftLint/.build/release/swiftlint\" --config .swiftlint.yml";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0C9121CA2FA1A0D400B0B36F /* Sources */ = {
@@ -616,6 +655,48 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0C85E9FF2FA22695008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/SwiftLint";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.63.2;
+			};
+		};
+		0C85EA042FA226E1008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/SwiftLint";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.63.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0C85EA002FA22695008C6B7B /* SwiftLintFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C85E9FF2FA22695008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			productName = SwiftLintFramework;
+		};
+		0C85EA022FA22695008C6B7B /* swiftlint */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C85E9FF2FA22695008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			productName = swiftlint;
+		};
+		0C85EA052FA226E1008C6B7B /* SwiftLintFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C85EA042FA226E1008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			productName = SwiftLintFramework;
+		};
+		0C85EA072FA226E1008C6B7B /* swiftlint */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C85EA042FA226E1008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			productName = swiftlint;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0C9121C62FA1A0D400B0B36F /* Project object */;
 }
