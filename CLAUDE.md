@@ -46,6 +46,17 @@ xcodebuild -project ZCam.xcodeproj -scheme ZCam -destination 'platform=iOS Simul
 5. マージ → Zennの記事に反映
 ```
 
+## ブランチ・PRルール
+
+- 実装はFEATURES.mdの番号単位（001, 002...）でブランチを作成する
+- ブランチ名: `feature/XXX-説明`（例: `feature/301-swiftlint-setup`）
+- 実装依頼を受けたら、まず該当番号のブランチを `main` から作成してから作業を開始する
+- 実装完了後は GitHub に PR を作成する。PRタイトルは `[XXX] 説明`（例: `[301] SwiftLint導入`）
+- `main` への直接 push は行わない
+- PR作成時は `.github/PULL_REQUEST_TEMPLATE.md` のテンプレートに従って記述する
+- **`git push` は岡本さんから明示的に指示があるまで絶対に実行しない**（commit のみ行い、push はしない）
+- **`git push` は岡本さんから明示的に指示があるまで絶対に実行しない**（commit のみ行い、push はしない）
+
 ## ドキュメント方針
 
 - `.md` ファイルはすべて**日本語**で書く（Zenn向け、対象読者は日本人エンジニア）
