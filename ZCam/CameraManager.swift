@@ -40,8 +40,14 @@ final class CameraManager: NSObject, ObservableObject {
                 session.addInput(input)
                 await MainActor.run { currentInput = input }
             }
+
+            try device.lockForConfiguration()
+            #if os(iOS)
+            device.videoZoomFactor = device.minAvailableVideoZoomFactor
+            #endif
+            device.unlockForConfiguration()
         } catch {
-            logger.error("カメラ入力の設定に失敗しました: \(error.localizedDescription)")
+            logger.error("カメラの設定に失敗しました: \(error.localizedDescription)")
         }
     }
 
