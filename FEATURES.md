@@ -29,7 +29,7 @@
 - [x] 302 `InfoPlist.xcstrings`の`NSCameraUsageDescription`の記述（en, jp対応）
     - `写真を撮影するためにカメラへのアクセスが必要です`
 - [ ] 303 Camera機能の実装
-    - [x] 303-1 `Deployment Info`の`iPhone Orientation`は`Portlate`のみ
+    - [x] 303-1 `Deployment Info`の`iPhone Orientation`は`Portrait`のみ
     - [ ] 303-2 カメラは背面カメラのみ。`builtInWideAngleCamera`を使う。
     - [ ] 303-3 `videoZoomFactor`は`minAvailableVideoZoomFactor`。
     - [ ] 303-4 カメラの画像はCALayerに表示。
