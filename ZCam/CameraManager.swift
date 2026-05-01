@@ -1,5 +1,8 @@
 import AVFoundation
 import Combine
+import OSLog
+
+private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", category: "CameraManager")
 
 @MainActor
 final class CameraManager: NSObject, ObservableObject {
@@ -11,6 +14,10 @@ final class CameraManager: NSObject, ObservableObject {
     private var currentInput: AVCaptureDeviceInput?
 
     func requestAccess() async {
+        if authorizationStatus == .authorized {
+            await configure()
+            return
+        }
         let granted = await AVCaptureDevice.requestAccess(for: .video)
         authorizationStatus = granted ? .authorized : .denied
         if granted {
@@ -18,8 +25,9 @@ final class CameraManager: NSObject, ObservableObject {
         }
     }
 
-    private func configure() async {
+    private nonisolated func configure() async {
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            logger.error("背面広角カメラが見つかりません")
             return
         }
 
@@ -30,10 +38,10 @@ final class CameraManager: NSObject, ObservableObject {
             let input = try AVCaptureDeviceInput(device: device)
             if session.canAddInput(input) {
                 session.addInput(input)
-                currentInput = input
+                await MainActor.run { currentInput = input }
             }
         } catch {
-            return
+            logger.error("カメラ入力の設定に失敗しました: \(error.localizedDescription)")
         }
     }
 
