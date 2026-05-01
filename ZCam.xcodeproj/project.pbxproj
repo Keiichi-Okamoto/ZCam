@@ -42,16 +42,22 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0C9121D02FA1A0D400B0B36F /* ZCam */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCam;
 			sourceTree = "<group>";
 		};
 		0C9121DE2FA1A0D500B0B36F /* ZCamTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCamTests;
 			sourceTree = "<group>";
 		};
 		0C9121E82FA1A0D500B0B36F /* ZCamUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ZCamUITests;
 			sourceTree = "<group>";
 		};
@@ -131,6 +137,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0C9121EF2FA1A0D500B0B36F /* Build configuration list for PBXNativeTarget "ZCam" */;
 			buildPhases = (
+				95ACCD0AEDFDB7CE13EA804D /* SwiftLint */,
 				0C9121CA2FA1A0D400B0B36F /* Sources */,
 				0C9121CB2FA1A0D400B0B36F /* Frameworks */,
 				0C9121CC2FA1A0D400B0B36F /* Resources */,
@@ -221,6 +228,9 @@
 			);
 			mainGroup = 0C9121C52FA1A0D400B0B36F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0C85EA042FA226E1008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0C9121CF2FA1A0D400B0B36F /* Products */;
 			projectDirPath = "";
@@ -258,6 +268,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		95ACCD0AEDFDB7CE13EA804D /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.swiftlint.yml",
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SWIFTLINT=\"${BUILD_DIR%Build/*}SourcePackages/artifacts/swiftlint/SwiftLintBinary/SwiftLintBinary.artifactbundle/macos/swiftlint\"\nif [ -f \"$SWIFTLINT\" ]; then\n    \"$SWIFTLINT\" --config \"${SRCROOT}/.swiftlint.yml\"\nelif which swiftlint > /dev/null; then\n    swiftlint --config \"${SRCROOT}/.swiftlint.yml\"\nelse\n    echo \"warning: SwiftLint not found, skipping lint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0C9121CA2FA1A0D400B0B36F /* Sources */ = {
@@ -427,6 +459,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -464,6 +497,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -616,6 +650,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0C85EA042FA226E1008C6B7B /* XCRemoteSwiftPackageReference "SwiftLint" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/SwiftLint";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.63.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 0C9121C62FA1A0D400B0B36F /* Project object */;
 }
