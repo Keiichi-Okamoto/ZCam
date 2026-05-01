@@ -3,8 +3,12 @@ disabled_rules:
   - function_body_length
   - type_body_length
   - trailing_whitespace
-  - todo
+  - todo # 初期開発フェーズでは // TODO: を気軽に使いたいため無効化。開発が落ち着いたら有効化を検討する
   - multiple_closures_with_trailing_closure
+
+excluded:
+  - .build
+  - DerivedData
 
 opt_in_rules:
   - sorted_imports
