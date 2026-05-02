@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "simulator_dummy.jpg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

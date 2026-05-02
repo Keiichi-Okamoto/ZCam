@@ -11,6 +11,13 @@ struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
 
     var body: some View {
+        #if targetEnvironment(simulator)
+        Image("simulator_dummy")
+            .resizable()
+            .scaledToFill()
+            .ignoresSafeArea()
+            .statusBarHidden(true)
+        #else
         CameraPreviewView(session: cameraManager.session)
             .ignoresSafeArea()
             .statusBarHidden(true)
@@ -18,6 +25,7 @@ struct ContentView: View {
                 await cameraManager.requestAccess()
                 cameraManager.start()
             }
+        #endif
     }
 }
 
