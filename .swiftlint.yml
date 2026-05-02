@@ -9,6 +9,8 @@ disabled_rules:
 excluded:
   - .build
   - DerivedData
+  - ZCamTests
+  - ZCamUITests
 
 opt_in_rules:
   - sorted_imports
