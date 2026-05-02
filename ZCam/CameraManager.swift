@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import Combine
 import OSLog
 
@@ -6,7 +6,7 @@ private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", c
 
 @MainActor
 final class CameraManager: NSObject, ObservableObject {
-    nonisolated let session = AVCaptureSession()
+    nonisolated(unsafe) let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
 
@@ -24,7 +24,7 @@ final class CameraManager: NSObject, ObservableObject {
         }
     }
 
-    private nonisolated func configure() async {
+    private func configure() async {
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             logger.error("背面広角カメラが見つかりません")
             return
