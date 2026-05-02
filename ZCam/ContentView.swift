@@ -5,6 +5,7 @@
 //  Created by 岡本啓一 on 2026/04/29.
 //
 
+import AVFoundation
 import SwiftUI
 
 struct ContentView: View {
