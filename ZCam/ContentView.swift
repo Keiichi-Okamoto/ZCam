@@ -25,6 +25,7 @@ struct ContentView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(.black)
+                    .ignoresSafeArea()
                     .statusBarHidden(true)
             } else {
                 CameraPreviewView(session: cameraManager.session)
