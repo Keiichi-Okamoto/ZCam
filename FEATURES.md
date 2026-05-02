@@ -36,23 +36,21 @@
     - [x] 303-5 カメラの画像は画面全体に表示。
         - Status Barは非表示
     - [x] 303-6 シミュレータで実行する場合には`#if targetEnvironment(simulator) `で判別し、`Resource/image/simulator_dummy.jpg`を使用する。
-    - [ ] 303-7 302のダイアログで拒否された場合には「カメラへのアクセスが許可されていません」とテキスト表示。
+    - [x] 303-7 302のダイアログで拒否された場合には「カメラへのアクセスが許可されていません」とテキスト表示。
 
 ## Chapter 4（変更の可能性あり）
-- [ ] `UIRequiredDeviceCapabilities`への追加
-    - `auto-focus-camera`, `camera-flash`
-- [ ] 401 continuousAutoFocus、continuousAutoWhiteBalance, continuousAutoExposure
+- [ ] 401 Auto Focus機能の追加
+    - [ ] 401-1 `UIRequiredDeviceCapabilities`への追加
+        - `auto-focus-camera`, `camera-flash`
+    - [ ] 401-2 continuousAutoFocus、continuousAutoWhiteBalance, continuousAutoExposure
     - continuousAuto -> auto -> locked
-- [ ] 402 focus Point
-    - 初期値は画面中央
-    - Focus Pointには`dot.crosshair`を緑で描画
-    - 指でタップした位置にFocus Pointを合わせる。
-    - 画面のダブルタップで画面中央に戻る
-    - Focus Pointが変わった場合にはアニメーションでSF Symbolを移動
-- [ ] 403 端末のローテーション
-    - 端末のローテーションに合わせて画像もローテーション
-    - ローテーション時には画面上のボタン等も中心を支点としてローテーション
-- [ ] 404 Zoom機能
+    - [ ] 401-3 focus Point
+        - 初期値は画面中央
+        - Focus Pointには`dot.crosshair`を緑で描画
+        - 指でタップした位置にFocus Pointを合わせる。
+        - 画面のダブルタップで画面中央に戻る
+        - Focus Pointが変わった場合にはアニメーションでSF Symbolを移動
+- [ ] 402 Zoom機能
     - ダミーのシャッターボタンを標準のカメラアプリと同じ位置に同じようなデザインで配置
     - AVCaptureDeviceの変更
         - 下記の順番でデバイスを選択 
@@ -63,7 +61,7 @@
         - 左を最小、右を最大とする
     - デフォルトは x1 
     - 光学ズーム内で最小値と最大値を決める
-- [ ] 405 FlashModeの選択
+- [ ] 403 FlashModeの選択
     - 自動, 常にOn, 常にOffの選択
         - 自動 bolt.badge.automatic.fill
         - 常にON bolt.fill
@@ -74,6 +72,8 @@
     - タップされるとポップアップのメニューを表示
         - 選択中の項目は✓を付ける。
     - 選択されるとモードを変更し、UserDefaultに保存
+- [ ] 404 端末のローテーション
+    - ローテーション時には画面上のボタン等も中心を支点としてローテーション
 
 ## Chapter 5
     

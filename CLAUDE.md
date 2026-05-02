@@ -46,6 +46,11 @@ xcodebuild -project ZCam.xcodeproj -scheme ZCam -destination 'platform=iOS Simul
 5. マージ → Zennの記事に反映
 ```
 
+## コメント署名
+
+- PRへのコメント投稿の末尾には必ず以下の署名を付ける
+  - `claude code (Dev用)`
+
 ## ブランチ・PRルール
 
 - 実装はFEATURES.mdの番号単位（001, 002...）でブランチを作成する
