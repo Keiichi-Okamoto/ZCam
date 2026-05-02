@@ -53,6 +53,7 @@ final class CameraManager: NSObject, ObservableObject {
 
                     try device.lockForConfiguration()
                     device.videoZoomFactor = device.minAvailableVideoZoomFactor
+                    Self.configureContinuousAuto(device: device)
                     device.unlockForConfiguration()
 
                     continuation.resume(returning: input)
@@ -63,6 +64,22 @@ final class CameraManager: NSObject, ObservableObject {
             }
         }
         currentInput = input
+    }
+
+    private nonisolated static func configureContinuousAuto(device: AVCaptureDevice) {
+        if device.isFocusModeSupported(.continuousAutoFocus) {
+            device.focusMode = .continuousAutoFocus
+        } else if device.isFocusModeSupported(.autoFocus) {
+            device.focusMode = .autoFocus
+        }
+
+        if device.isWhiteBalanceModeSupported(.continuousAutoWhiteBalance) {
+            device.whiteBalanceMode = .continuousAutoWhiteBalance
+        }
+
+        if device.isExposureModeSupported(.continuousAutoExposure) {
+            device.exposureMode = .continuousAutoExposure
+        }
     }
 
     func start() {
