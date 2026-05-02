@@ -33,7 +33,7 @@
     - [x] 303-2 カメラは背面カメラのみ。`builtInWideAngleCamera`を使う。
     - [x] 303-3 `videoZoomFactor`は`minAvailableVideoZoomFactor`。
     - [x] 303-4 カメラの画像はCALayerに表示。
-    - [ ] 303-5 カメラの画像は画面全体に表示。
+    - [x] 303-5 カメラの画像は画面全体に表示。
         - Status Barは非表示
     - [ ] 303-6 シミュレータで実行する場合には`#if targetEnvironment(simulator) `で判別し、`Resource/image/simulator_dummy.jpg`を使用する。
     - [ ] 303-7 302のダイアログで拒否された場合には「カメラへのアクセスが許可されていません」とテキスト表示。

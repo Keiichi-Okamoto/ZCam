@@ -13,6 +13,7 @@ struct ContentView: View {
     var body: some View {
         CameraPreviewView(session: cameraManager.session)
             .ignoresSafeArea()
+            .statusBarHidden(true)
             .task {
                 await cameraManager.requestAccess()
                 cameraManager.start()
