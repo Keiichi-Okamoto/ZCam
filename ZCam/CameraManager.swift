@@ -2,7 +2,7 @@
 import Combine
 import OSLog
 
-private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", category: "CameraManager")
+nonisolated private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", category: "CameraManager")
 
 @MainActor
 final class CameraManager: NSObject, ObservableObject {
@@ -12,54 +12,67 @@ final class CameraManager: NSObject, ObservableObject {
 
     private var currentInput: AVCaptureDeviceInput?
 
+    // AVCaptureSession の操作は Apple 推奨の専用シリアルキューで実行する
+    private let sessionQueue = DispatchQueue(label: "com.example.ZCam.sessionQueue")
+
     func requestAccess() async {
         if authorizationStatus == .authorized {
             await configure()
+            start()
             return
         }
         let granted = await AVCaptureDevice.requestAccess(for: .video)
         authorizationStatus = granted ? .authorized : .denied
         if granted {
             await configure()
+            start()
         }
     }
 
     private func configure() async {
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-            logger.error("背面広角カメラが見つかりません")
-            return
-        }
+        let input: AVCaptureDeviceInput? = await withCheckedContinuation { continuation in
+            sessionQueue.async { [session] in
+                guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+                    logger.error("背面広角カメラが見つかりません")
+                    continuation.resume(returning: nil)
+                    return
+                }
 
-        session.beginConfiguration()
-        defer { session.commitConfiguration() }
+                session.beginConfiguration()
+                defer { session.commitConfiguration() }
 
-        do {
-            let input = try AVCaptureDeviceInput(device: device)
-            if session.canAddInput(input) {
-                session.addInput(input)
-                await MainActor.run { currentInput = input }
+                do {
+                    let input = try AVCaptureDeviceInput(device: device)
+                    guard session.canAddInput(input) else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    session.addInput(input)
 
-                try device.lockForConfiguration()
-                #if os(iOS)
-                device.videoZoomFactor = device.minAvailableVideoZoomFactor
-                #endif
-                device.unlockForConfiguration()
+                    try device.lockForConfiguration()
+                    device.videoZoomFactor = device.minAvailableVideoZoomFactor
+                    device.unlockForConfiguration()
+
+                    continuation.resume(returning: input)
+                } catch {
+                    logger.error("カメラの設定に失敗しました: \(error.localizedDescription)")
+                    continuation.resume(returning: nil)
+                }
             }
-        } catch {
-            logger.error("カメラの設定に失敗しました: \(error.localizedDescription)")
         }
+        currentInput = input
     }
 
     func start() {
         guard !session.isRunning else { return }
-        Task.detached { [session] in
+        sessionQueue.async { [session] in
             session.startRunning()
         }
     }
 
     func stop() {
         guard session.isRunning else { return }
-        Task.detached { [session] in
+        sessionQueue.async { [session] in
             session.stopRunning()
         }
     }

@@ -37,4 +37,59 @@
         - Status Barは非表示
     - [x] 303-6 シミュレータで実行する場合には`#if targetEnvironment(simulator) `で判別し、`Resource/image/simulator_dummy.jpg`を使用する。
     - [ ] 303-7 302のダイアログで拒否された場合には「カメラへのアクセスが許可されていません」とテキスト表示。
+
+## Chapter 4（変更の可能性あり）
+- [ ] `UIRequiredDeviceCapabilities`への追加
+    - `auto-focus-camera`, `camera-flash`
+- [ ] 401 continuousAutoFocus、continuousAutoWhiteBalance, continuousAutoExposure
+    - continuousAuto -> auto -> locked
+- [ ] 402 focus Point
+    - 初期値は画面中央
+    - Focus Pointには`dot.crosshair`を緑で描画
+    - 指でタップした位置にFocus Pointを合わせる。
+    - 画面のダブルタップで画面中央に戻る
+    - Focus Pointが変わった場合にはアニメーションでSF Symbolを移動
+- [ ] 403 端末のローテーション
+    - 端末のローテーションに合わせて画像もローテーション
+    - ローテーション時には画面上のボタン等も中心を支点としてローテーション
+- [ ] 404 Zoom機能
+    - ダミーのシャッターボタンを標準のカメラアプリと同じ位置に同じようなデザインで配置
+    - AVCaptureDeviceの変更
+        - 下記の順番でデバイスを選択 
+        - builtInTripleCamera -> builtInDualCamera -> builtInWideAngleCamera
+    - Zoom用スラーダーの実装
+        - Portrait時： シャッターボタンの上に配置
+        - Landscape時 : 画面下部に配置
+        - 左を最小、右を最大とする
+    - デフォルトは x1 
+    - 光学ズーム内で最小値と最大値を決める
+- [ ] 405 FlashModeの選択
+    - 自動, 常にOn, 常にOffの選択
+        - 自動 bolt.badge.automatic.fill
+        - 常にON bolt.fill
+        - 常にOff bolt.slash.fill
+    - 初期値は自動
+    - 選択されているFlashModeのSF Symbolを表示
+    - 位置は画面左上
+    - タップされるとポップアップのメニューを表示
+        - 選択中の項目は✓を付ける。
+    - 選択されるとモードを変更し、UserDefaultに保存
+
+## Chapter 5
+    
+## Chapter 6
+    - `UIRequiredDeviceCapabilities`に`metal`を追加
+    - `CALayer`を`MTKView`に置き換える
+    
+
+## Chapter 7
+    - `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加
+        - 「撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。」
+    - デバイスの向きに合わせて画像を回転させて保存
+
+
+    - PrivacyInfoの追加
+        - 全ソースをチェックし必要な項目を記述する
+
+## Chapter 8
     

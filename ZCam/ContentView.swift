@@ -23,7 +23,6 @@ struct ContentView: View {
             .statusBarHidden(true)
             .task {
                 await cameraManager.requestAccess()
-                cameraManager.start()
             }
         #endif
     }
