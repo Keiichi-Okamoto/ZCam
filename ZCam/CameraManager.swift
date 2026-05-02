@@ -6,6 +6,8 @@ nonisolated private let logger = Logger(subsystem: Bundle.main.bundleIdentifier 
 
 @MainActor
 final class CameraManager: NSObject, ObservableObject {
+    // Swift 6 では non-Sendable 型に nonisolated を付けられないため nonisolated(unsafe) を使用。
+    // session は sessionQueue 上でのみ操作するため、スレッド安全性は呼び出し側で保証する。
     nonisolated(unsafe) let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
