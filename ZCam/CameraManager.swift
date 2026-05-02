@@ -6,7 +6,6 @@ private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", c
 
 @MainActor
 final class CameraManager: NSObject, ObservableObject {
-
     nonisolated let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)

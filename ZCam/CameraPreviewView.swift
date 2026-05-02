@@ -15,11 +15,12 @@ struct CameraPreviewView: UIViewRepresentable {
 }
 
 final class PreviewView: UIView {
-    override class var layerClass: AnyClass {
+    override static var layerClass: AnyClass {
         AVCaptureVideoPreviewLayer.self
     }
 
     var previewLayer: AVCaptureVideoPreviewLayer {
-        layer as! AVCaptureVideoPreviewLayer
+        // layerClassをAVCaptureVideoPreviewLayerに固定しているため常に成功する
+        layer as! AVCaptureVideoPreviewLayer // swiftlint:disable:this force_cast
     }
 }
