@@ -18,12 +18,22 @@ struct ContentView: View {
             .ignoresSafeArea()
             .statusBarHidden(true)
         #else
-        CameraPreviewView(session: cameraManager.session)
-            .ignoresSafeArea()
-            .statusBarHidden(true)
-            .task {
-                await cameraManager.requestAccess()
+        Group {
+            if cameraManager.authorizationStatus == .denied || cameraManager.authorizationStatus == .restricted {
+                Text("カメラへのアクセスが許可されていません")
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(.black)
+                    .statusBarHidden(true)
+            } else {
+                CameraPreviewView(session: cameraManager.session)
+                    .ignoresSafeArea()
+                    .statusBarHidden(true)
             }
+        }
+        .task {
+            await cameraManager.requestAccess()
+        }
         #endif
     }
 }
