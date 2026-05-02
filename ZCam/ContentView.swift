@@ -5,6 +5,7 @@
 //  Created by 岡本啓一 on 2026/04/29.
 //
 
+import AVFoundation
 import SwiftUI
 
 struct ContentView: View {
@@ -18,12 +19,23 @@ struct ContentView: View {
             .ignoresSafeArea()
             .statusBarHidden(true)
         #else
-        CameraPreviewView(session: cameraManager.session)
-            .ignoresSafeArea()
-            .statusBarHidden(true)
-            .task {
-                await cameraManager.requestAccess()
+        Group {
+            if cameraManager.authorizationStatus == .denied || cameraManager.authorizationStatus == .restricted {
+                Text("カメラへのアクセスが許可されていません")
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(.black)
+                    .ignoresSafeArea()
+                    .statusBarHidden(true)
+            } else {
+                CameraPreviewView(session: cameraManager.session)
+                    .ignoresSafeArea()
+                    .statusBarHidden(true)
             }
+        }
+        .task {
+            await cameraManager.requestAccess()
+        }
         #endif
     }
 }
