@@ -53,6 +53,7 @@ final class CameraManager: NSObject, ObservableObject {
 
                     try device.lockForConfiguration()
                     device.videoZoomFactor = device.minAvailableVideoZoomFactor
+                    Self.configureContinuousAuto(device: device)
                     device.unlockForConfiguration()
 
                     continuation.resume(returning: input)
@@ -65,11 +66,60 @@ final class CameraManager: NSObject, ObservableObject {
         currentInput = input
     }
 
+    private nonisolated static func configureContinuousAuto(device: AVCaptureDevice) {
+        if device.isFocusModeSupported(.continuousAutoFocus) {
+            device.focusMode = .continuousAutoFocus
+        } else if device.isFocusModeSupported(.autoFocus) {
+            device.focusMode = .autoFocus
+        }
+
+        if device.isWhiteBalanceModeSupported(.continuousAutoWhiteBalance) {
+            device.whiteBalanceMode = .continuousAutoWhiteBalance
+        }
+
+        if device.isExposureModeSupported(.continuousAutoExposure) {
+            device.exposureMode = .continuousAutoExposure
+        }
+    }
+
     func start() {
         guard !session.isRunning else { return }
         sessionQueue.async { [session] in
             session.startRunning()
         }
+    }
+
+    func setFocusPoint(_ point: CGPoint) {
+        guard let device = currentInput?.device else { return }
+        sessionQueue.async {
+            do {
+                try device.lockForConfiguration()
+                if device.isFocusPointOfInterestSupported {
+                    device.focusPointOfInterest = point
+                    if device.isFocusModeSupported(.continuousAutoFocus) {
+                        device.focusMode = .continuousAutoFocus
+                    } else if device.isFocusModeSupported(.autoFocus) {
+                        device.focusMode = .autoFocus
+                    }
+                }
+                if device.isExposurePointOfInterestSupported {
+                    device.exposurePointOfInterest = point
+                    if device.isExposureModeSupported(.continuousAutoExposure) {
+                        device.exposureMode = .continuousAutoExposure
+                    } else if device.isExposureModeSupported(.autoExpose) {
+                        device.exposureMode = .autoExpose
+                    }
+                }
+                device.unlockForConfiguration()
+                logger.debug("フォーカスポイントを設定: \(point.x, privacy: .public), \(point.y, privacy: .public)")
+            } catch {
+                logger.error("フォーカスポイントの設定に失敗: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func resetFocusToCenter() {
+        setFocusPoint(CGPoint(x: 0.5, y: 0.5))
     }
 
     func stop() {

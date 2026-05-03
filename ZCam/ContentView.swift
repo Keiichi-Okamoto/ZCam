@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
+    @State private var focusIndicatorPosition: CGPoint = CGPoint(x: 0.5, y: 0.5)
 
     var body: some View {
         #if targetEnvironment(simulator)
@@ -28,9 +29,26 @@ struct ContentView: View {
                     .ignoresSafeArea()
                     .statusBarHidden(true)
             } else {
-                CameraPreviewView(session: cameraManager.session)
+                CameraPreviewView(session: cameraManager.session) { devicePoint, screenPoint in
+                    cameraManager.setFocusPoint(devicePoint)
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        focusIndicatorPosition = screenPoint
+                    }
+                }
+                .ignoresSafeArea()
+                .overlay(alignment: .topLeading) {
+                    GeometryReader { geometry in
+                        Image(systemName: "dot.crosshair")
+                            .font(.system(size: 60))
+                            .foregroundStyle(.green)
+                            .position(
+                                x: focusIndicatorPosition.x * geometry.size.width,
+                                y: focusIndicatorPosition.y * geometry.size.height
+                            )
+                    }
                     .ignoresSafeArea()
-                    .statusBarHidden(true)
+                }
+                .statusBarHidden(true)
             }
         }
         .task {
