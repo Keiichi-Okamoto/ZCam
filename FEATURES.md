@@ -28,7 +28,7 @@
         - 同じく`find`、`cat`、`grep`、`ls`、`head`、`tail`、`wc`、`xcrun`などの読み取り専用コマンドも`allowedTools`に追加する（AIが実装）。調査・確認作業を確認なしで行えるようにするため。
 - [x] 302 `InfoPlist.xcstrings`の`NSCameraUsageDescription`の記述（en, jp対応）
     - `写真を撮影するためにカメラへのアクセスが必要です`
-- [ ] 303 Camera機能の実装
+- [x] 303 Camera機能の実装
     - [x] 303-1 `Deployment Info`の`iPhone Orientation`は`Portrait`のみ
     - [x] 303-2 カメラは背面カメラのみ。`builtInWideAngleCamera`を使う。
     - [x] 303-3 `videoZoomFactor`は`minAvailableVideoZoomFactor`。
@@ -40,11 +40,12 @@
 
 ## Chapter 4（変更の可能性あり）
 - [x] 401 Auto Focus機能の追加
-    - [ ] 401-1 `UIRequiredDeviceCapabilities`への追加
+    - [x] 401-1 `UIRequiredDeviceCapabilities`への追加
         - `auto-focus-camera`, `camera-flash`
-    - [ ] 401-2 continuousAutoFocus、continuousAutoWhiteBalance, continuousAutoExposure
-    - continuousAuto -> auto -> locked
-    - [ ] 401-3 focus Point
+    - [x] 401-2 continuousAutoFocus、continuousAutoWhiteBalance, continuousAutoExposure
+        - 下記の順番で可能なものに設定。
+        - continuousAuto -> auto -> locked
+    - [x] 401-3 focus Point
         - 初期値は画面中央
         - Focus Pointには`dot.crosshair`を緑で描画
         - 指でタップした位置にFocus Pointを合わせる。
