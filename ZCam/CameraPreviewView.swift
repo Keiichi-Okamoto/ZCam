@@ -65,4 +65,19 @@ final class PreviewView: UIView {
         // layerClassをAVCaptureVideoPreviewLayerに固定しているため常に成功する
         layer as! AVCaptureVideoPreviewLayer // swiftlint:disable:this force_cast
     }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previewLayer.frame = bounds
+        if let connection = previewLayer.connection, connection.isVideoRotationAngleSupported(90) {
+            let angle: CGFloat
+            switch window?.windowScene?.interfaceOrientation {
+            case .landscapeLeft:            angle = 180
+            case .landscapeRight:           angle = 0
+            case .portraitUpsideDown:       angle = 270
+            default:                        angle = 90
+            }
+            connection.videoRotationAngle = angle
+        }
+    }
 }

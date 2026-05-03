@@ -47,8 +47,9 @@ struct ContentView: View {
                                 y: focusIndicatorPosition.y * geometry.size.height
                             )
                     }
-                    .statusBarHidden(true)
                 }
+                .ignoresSafeArea()
+                .statusBarHidden(true)
             }
         }
         .task {
