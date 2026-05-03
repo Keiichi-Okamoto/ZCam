@@ -11,7 +11,6 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
-    @Published var focusPoint: CGPoint = CGPoint(x: 0.5, y: 0.5)
 
     private var currentInput: AVCaptureDeviceInput?
 
@@ -92,8 +91,7 @@ final class CameraManager: NSObject, ObservableObject {
 
     func setFocusPoint(_ point: CGPoint) {
         guard let device = currentInput?.device else { return }
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
+        sessionQueue.async {
             do {
                 try device.lockForConfiguration()
                 if device.isFocusPointOfInterestSupported {
@@ -116,9 +114,6 @@ final class CameraManager: NSObject, ObservableObject {
                 logger.debug("フォーカスポイントを設定: \(point.x, privacy: .public), \(point.y, privacy: .public)")
             } catch {
                 logger.error("フォーカスポイントの設定に失敗: \(error.localizedDescription)")
-            }
-            Task { @MainActor in
-                self.focusPoint = point
             }
         }
     }
