@@ -39,21 +39,24 @@
 		EA5CE50D6F5DC242B017055C /* .gitignore */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		0C9121D02FA1A0D400B0B36F /* ZCam */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				0C9121D02FA1A0D400B0B36E /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
-			);
-			path = ZCam;
-			sourceTree = "<group>";
-		};
-		0C9121D02FA1A0D400B0B36E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0C9121D02FA1A0D400B0B36E /* Exceptions for "ZCam" folder in "ZCam" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 0C9121CD2FA1A0D400B0B36F /* ZCam */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		0C9121D02FA1A0D400B0B36F /* ZCam */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0C9121D02FA1A0D400B0B36E /* Exceptions for "ZCam" folder in "ZCam" target */,
+			);
+			path = ZCam;
+			sourceTree = "<group>";
 		};
 		0C9121DE2FA1A0D500B0B36F /* ZCamTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -462,10 +465,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8A2296RC3N;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ZCam/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -496,10 +500,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8A2296RC3N;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ZCam/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
