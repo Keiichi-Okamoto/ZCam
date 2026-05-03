@@ -74,3 +74,6 @@ xcodebuild -project ZCam.xcodeproj -scheme ZCam -destination 'platform=iOS Simul
 - Bundle ID: `com.example.ZCam`（クローンした人が自分の Apple ID で実機実行できる汎用設定）
 - Signing: Automatically manage signing をオン
 - Team: クローンした人が自分の Apple ID に変更するだけで動く設計
+- **commit 前に必ず `DEVELOPMENT_TEAM = "";` になっていることを確認する**
+  - Xcode でチームを設定すると `project.pbxproj` に実名の Team ID が書き込まれる
+  - commit 前に `git diff ZCam.xcodeproj/project.pbxproj` で `DEVELOPMENT_TEAM` が空になっているか確認し、空でなければ空文字列に戻してから commit する
