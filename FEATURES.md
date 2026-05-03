@@ -39,7 +39,7 @@
     - [x] 303-7 302のダイアログで拒否された場合には「カメラへのアクセスが許可されていません」とテキスト表示。
 
 ## Chapter 4（変更の可能性あり）
-- [ ] 401 Auto Focus機能の追加
+- [x] 401 Auto Focus機能の追加
     - [ ] 401-1 `UIRequiredDeviceCapabilities`への追加
         - `auto-focus-camera`, `camera-flash`
     - [ ] 401-2 continuousAutoFocus、continuousAutoWhiteBalance, continuousAutoExposure
