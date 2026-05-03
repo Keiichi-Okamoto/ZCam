@@ -96,13 +96,21 @@ final class CameraManager: NSObject, ObservableObject {
             guard let self else { return }
             do {
                 try device.lockForConfiguration()
-                if device.isFocusPointOfInterestSupported && device.isFocusModeSupported(.continuousAutoFocus) {
+                if device.isFocusPointOfInterestSupported {
                     device.focusPointOfInterest = point
-                    device.focusMode = .continuousAutoFocus
+                    if device.isFocusModeSupported(.continuousAutoFocus) {
+                        device.focusMode = .continuousAutoFocus
+                    } else if device.isFocusModeSupported(.autoFocus) {
+                        device.focusMode = .autoFocus
+                    }
                 }
-                if device.isExposurePointOfInterestSupported && device.isExposureModeSupported(.continuousAutoExposure) {
+                if device.isExposurePointOfInterestSupported {
                     device.exposurePointOfInterest = point
-                    device.exposureMode = .continuousAutoExposure
+                    if device.isExposureModeSupported(.continuousAutoExposure) {
+                        device.exposureMode = .continuousAutoExposure
+                    } else if device.isExposureModeSupported(.autoExpose) {
+                        device.exposureMode = .autoExpose
+                    }
                 }
                 device.unlockForConfiguration()
                 logger.debug("フォーカスポイントを設定: \(point.x, privacy: .public), \(point.y, privacy: .public)")
