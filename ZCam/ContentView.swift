@@ -10,7 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
-    @State private var focusIndicatorOffset: CGSize = .zero
+    @State private var focusIndicatorPosition: CGPoint = CGPoint(x: 0.5, y: 0.5)
 
     var body: some View {
         #if targetEnvironment(simulator)
@@ -31,35 +31,23 @@ struct ContentView: View {
             } else {
                 GeometryReader { geometry in
                     ZStack {
-                        CameraPreviewView(session: cameraManager.session)
-                            .ignoresSafeArea()
+                        CameraPreviewView(session: cameraManager.session) { devicePoint, screenPoint in
+                            cameraManager.setFocusPoint(devicePoint)
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                focusIndicatorPosition = screenPoint
+                            }
+                        }
+                        .ignoresSafeArea()
 
                         Image(systemName: "dot.crosshair")
                             .font(.system(size: 60))
                             .foregroundStyle(.green)
-                            .offset(focusIndicatorOffset)
+                            .position(
+                                x: focusIndicatorPosition.x * geometry.size.width,
+                                y: focusIndicatorPosition.y * geometry.size.height
+                            )
                     }
                     .statusBarHidden(true)
-                    .gesture(
-                        TapGesture(count: 2)
-                            .onEnded {
-                                let center = CGPoint(x: 0.5, y: 0.5)
-                                cameraManager.resetFocusToCenter()
-                                moveFocusIndicator(to: center, in: geometry.size)
-                            }
-                    )
-                    .simultaneousGesture(
-                        SpatialTapGesture()
-                            .onEnded { value in
-                                let size = geometry.size
-                                let normalized = CGPoint(
-                                    x: value.location.x / size.width,
-                                    y: value.location.y / size.height
-                                )
-                                cameraManager.setFocusPoint(normalized)
-                                moveFocusIndicator(to: normalized, in: size)
-                            }
-                    )
                 }
             }
         }
@@ -67,14 +55,6 @@ struct ContentView: View {
             await cameraManager.requestAccess()
         }
         #endif
-    }
-
-    private func moveFocusIndicator(to normalizedPoint: CGPoint, in size: CGSize) {
-        let offsetX = normalizedPoint.x * size.width - size.width / 2
-        let offsetY = normalizedPoint.y * size.height - size.height / 2
-        withAnimation(.easeInOut(duration: 0.2)) {
-            focusIndicatorOffset = CGSize(width: offsetX, height: offsetY)
-        }
     }
 }
 
