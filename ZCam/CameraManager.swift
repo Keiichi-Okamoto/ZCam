@@ -11,6 +11,11 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
+    #if targetEnvironment(simulator)
+    @Published var zoomFactor: CGFloat = 1.5
+    #else
+    @Published var zoomFactor: CGFloat = 1.0
+    #endif
 
     private var currentInput: AVCaptureDeviceInput?
 
@@ -34,8 +39,8 @@ final class CameraManager: NSObject, ObservableObject {
     private func configure() async {
         let input: AVCaptureDeviceInput? = await withCheckedContinuation { continuation in
             sessionQueue.async { [session] in
-                guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-                    logger.error("背面広角カメラが見つかりません")
+                guard let device = Self.preferredBackCamera() else {
+                    logger.error("背面カメラが見つかりません")
                     continuation.resume(returning: nil)
                     return
                 }
@@ -52,7 +57,7 @@ final class CameraManager: NSObject, ObservableObject {
                     session.addInput(input)
 
                     try device.lockForConfiguration()
-                    device.videoZoomFactor = device.minAvailableVideoZoomFactor
+                    device.videoZoomFactor = 1.0
                     Self.configureContinuousAuto(device: device)
                     device.unlockForConfiguration()
 
@@ -64,6 +69,21 @@ final class CameraManager: NSObject, ObservableObject {
             }
         }
         currentInput = input
+    }
+
+    private nonisolated static func preferredBackCamera() -> AVCaptureDevice? {
+        let types: [AVCaptureDevice.DeviceType] = [
+            .builtInTripleCamera,
+            .builtInDualCamera,
+            .builtInWideAngleCamera
+        ]
+        for type in types {
+            if let device = AVCaptureDevice.default(type, for: .video, position: .back) {
+                logger.info("使用するカメラ: \(device.localizedName, privacy: .public)")
+                return device
+            }
+        }
+        return nil
     }
 
     private nonisolated static func configureContinuousAuto(device: AVCaptureDevice) {
@@ -86,6 +106,22 @@ final class CameraManager: NSObject, ObservableObject {
         guard !session.isRunning else { return }
         sessionQueue.async { [session] in
             session.startRunning()
+        }
+    }
+
+    func setZoomFactor(_ factor: CGFloat) {
+        zoomFactor = factor
+        guard let device = currentInput?.device else { return }
+        let clamped = min(max(factor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
+        sessionQueue.async {
+            do {
+                try device.lockForConfiguration()
+                device.videoZoomFactor = clamped
+                device.unlockForConfiguration()
+                logger.debug("ズーム倍率: \(clamped, privacy: .public)")
+            } catch {
+                logger.error("ズーム設定に失敗: \(error.localizedDescription)")
+            }
         }
     }
 
