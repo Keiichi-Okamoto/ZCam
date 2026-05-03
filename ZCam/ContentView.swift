@@ -11,7 +11,6 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
     @State private var focusIndicatorOffset: CGSize = .zero
-    @State private var showFocusIndicator: Bool = false
 
     var body: some View {
         #if targetEnvironment(simulator)
@@ -35,13 +34,10 @@ struct ContentView: View {
                         CameraPreviewView(session: cameraManager.session)
                             .ignoresSafeArea()
 
-                        if showFocusIndicator {
-                            Image(systemName: "dot.crosshair")
-                                .font(.system(size: 60))
-                                .foregroundStyle(.green)
-                                .offset(focusIndicatorOffset)
-                                .transition(.opacity)
-                        }
+                        Image(systemName: "dot.crosshair")
+                            .font(.system(size: 60))
+                            .foregroundStyle(.green)
+                            .offset(focusIndicatorOffset)
                     }
                     .statusBarHidden(true)
                     .gesture(
@@ -78,13 +74,6 @@ struct ContentView: View {
         let offsetY = normalizedPoint.y * size.height - size.height / 2
         withAnimation(.easeInOut(duration: 0.2)) {
             focusIndicatorOffset = CGSize(width: offsetX, height: offsetY)
-            showFocusIndicator = true
-        }
-        Task {
-            try? await Task.sleep(for: .seconds(1.5))
-            withAnimation(.easeOut(duration: 0.3)) {
-                showFocusIndicator = false
-            }
         }
     }
 }
