@@ -52,29 +52,37 @@
         - 画面のダブルタップで画面中央に戻る
         - Focus Pointが変わった場合にはアニメーションでSF Symbolを移動
 - [ ] 402 Zoom機能
-    - ダミーのシャッターボタンを標準のカメラアプリと同じ位置に同じようなデザインで配置
-    - AVCaptureDeviceの変更
+    - [ ] 402-1 ダミーのシャッターボタンを標準のカメラアプリと同じ位置に同じようなデザインで配置
+    - [ ] 402-2 AVCaptureDeviceの変更
         - 下記の順番でデバイスを選択 
         - builtInTripleCamera -> builtInDualCamera -> builtInWideAngleCamera
-    - Zoom用スラーダーの実装
-        - Portrait時： シャッターボタンの上に配置
-        - Landscape時 : 画面下部に配置
+    - [ ] 402-3 Zoom用スラーダーの実装
+        - シャッターボタンの上に配置
         - 左を最小、右を最大とする
-    - デフォルトは x1 
-    - 光学ズーム内で最小値と最大値を決める
+    - [ ] 402-4 builtInWideAngleCameraの最小倍率を1とする
+    - [ ] 402-5 デフォルトは
+        - 実機: x1
+        - シミュレータ: x1.5 
+    - [ ] 402-6 スライダの最小最高値
+        - 実機: min = 0.5, max = 3.0
+    - [ ] 402-7 スライダの操作に合わせて画像の拡大縮小
+        - 実機、シミュレータでそれぞれスライダーの値に合わせて対応する画像を拡大縮小する。
 - [ ] 403 FlashModeの選択
-    - 自動, 常にOn, 常にOffの選択
-        - 自動 bolt.badge.automatic.fill
-        - 常にON bolt.fill
-        - 常にOff bolt.slash.fill
-    - 初期値は自動
-    - 選択されているFlashModeのSF Symbolを表示
-    - 位置は画面左上
-    - タップされるとポップアップのメニューを表示
+    - モード
+        - 自動 `bolt.badge.automatic.fill`
+        - 常にON `bolt.fill`
+        - 常にOff `bolt.slash.fill`
+    -　[ ] 403-1 画面左上にボタンとして表示
+        - 初期値は自動とし、選択されているモードにより`SF Symbol`を表示する
+    -　[ ] 403-2 タップされるとポップアップのメニューを表示
         - 選択中の項目は✓を付ける。
-    - 選択されるとモードを変更し、UserDefaultに保存
+        - 自動, 常にOn, 常にOffの選択
+    - [ ] 403-3 選択されるとモードを変更し、UserDefaultに保存
 - [ ] 404 端末のローテーション
     - ローテーション時には画面上のボタン等も中心を支点としてローテーション
+    - スライダー
+        - Portrait: シャッターボタンの上部に表示。画面横幅の80% 
+        - Landscape: Landscapeにした時の画面下部に表示。Landscapeにした時の画面幅の80%
 
 ## Chapter 5
     
