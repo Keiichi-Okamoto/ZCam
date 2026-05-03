@@ -68,16 +68,14 @@ final class PreviewView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        // CALayerのアニメーションを無効化してフレーム更新をアニメーションなしで反映する
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         previewLayer.frame = bounds
+        // 404（端末ローテーション）実装まではportrait固定（90°）
         if let connection = previewLayer.connection, connection.isVideoRotationAngleSupported(90) {
-            let angle: CGFloat
-            switch window?.windowScene?.interfaceOrientation {
-            case .landscapeLeft:            angle = 180
-            case .landscapeRight:           angle = 0
-            case .portraitUpsideDown:       angle = 270
-            default:                        angle = 90
-            }
-            connection.videoRotationAngle = angle
+            connection.videoRotationAngle = 90
         }
+        CATransaction.commit()
     }
 }

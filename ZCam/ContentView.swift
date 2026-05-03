@@ -29,16 +29,15 @@ struct ContentView: View {
                     .ignoresSafeArea()
                     .statusBarHidden(true)
             } else {
-                GeometryReader { geometry in
-                    ZStack {
-                        CameraPreviewView(session: cameraManager.session) { devicePoint, screenPoint in
-                            cameraManager.setFocusPoint(devicePoint)
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                focusIndicatorPosition = screenPoint
-                            }
-                        }
-                        .ignoresSafeArea()
-
+                CameraPreviewView(session: cameraManager.session) { devicePoint, screenPoint in
+                    cameraManager.setFocusPoint(devicePoint)
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        focusIndicatorPosition = screenPoint
+                    }
+                }
+                .ignoresSafeArea()
+                .overlay(alignment: .topLeading) {
+                    GeometryReader { geometry in
                         Image(systemName: "dot.crosshair")
                             .font(.system(size: 60))
                             .foregroundStyle(.green)
@@ -47,8 +46,8 @@ struct ContentView: View {
                                 y: focusIndicatorPosition.y * geometry.size.height
                             )
                     }
+                    .ignoresSafeArea()
                 }
-                .ignoresSafeArea()
                 .statusBarHidden(true)
             }
         }
