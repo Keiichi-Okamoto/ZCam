@@ -11,6 +11,7 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
+    @Published var focusPoint: CGPoint = CGPoint(x: 0.5, y: 0.5)
 
     private var currentInput: AVCaptureDeviceInput?
 
@@ -87,6 +88,35 @@ final class CameraManager: NSObject, ObservableObject {
         sessionQueue.async { [session] in
             session.startRunning()
         }
+    }
+
+    func setFocusPoint(_ point: CGPoint) {
+        guard let device = currentInput?.device else { return }
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                try device.lockForConfiguration()
+                if device.isFocusPointOfInterestSupported && device.isFocusModeSupported(.autoFocus) {
+                    device.focusPointOfInterest = point
+                    device.focusMode = .autoFocus
+                }
+                if device.isExposurePointOfInterestSupported && device.isExposureModeSupported(.autoExpose) {
+                    device.exposurePointOfInterest = point
+                    device.exposureMode = .autoExpose
+                }
+                device.unlockForConfiguration()
+                logger.debug("フォーカスポイントを設定: \(point.x, privacy: .public), \(point.y, privacy: .public)")
+            } catch {
+                logger.error("フォーカスポイントの設定に失敗: \(error.localizedDescription)")
+            }
+            Task { @MainActor in
+                self.focusPoint = point
+            }
+        }
+    }
+
+    func resetFocusToCenter() {
+        setFocusPoint(CGPoint(x: 0.5, y: 0.5))
     }
 
     func stop() {
