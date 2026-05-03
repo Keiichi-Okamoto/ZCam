@@ -110,9 +110,13 @@ final class CameraManager: NSObject, ObservableObject {
     }
 
     func setZoomFactor(_ factor: CGFloat) {
-        zoomFactor = factor
-        guard let device = currentInput?.device else { return }
+        guard let device = currentInput?.device else {
+            zoomFactor = factor
+            logger.debug("ズーム倍率: \(factor, privacy: .public)")
+            return
+        }
         let clamped = min(max(factor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
+        zoomFactor = clamped
         sessionQueue.async {
             do {
                 try device.lockForConfiguration()
