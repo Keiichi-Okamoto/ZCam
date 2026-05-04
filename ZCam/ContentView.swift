@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
+    @StateObject private var orientationObserver = OrientationObserver()
     @State private var focusIndicatorPosition: CGPoint = CGPoint(x: 0.5, y: 0.5)
     @State private var isFlashMenuOpen = false
 
@@ -67,12 +68,28 @@ struct ContentView: View {
                     .padding(8)
                     .background(isFlashMenuOpen ? .white : .black.opacity(0.4), in: Circle())
             }
+            .rotationEffect(orientationObserver.rotationAngle)
+            .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
 
             // フラッシュメニュー（トグルON時に表示）
             if isFlashMenuOpen {
                 flashModeMenu
-                    .offset(x: 36, y: 36)
+                    .rotationEffect(orientationObserver.rotationAngle)
+                    .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
+                    .offset(flashMenuOffset)
             }
+        }
+    }
+
+    /// 向きに応じたメニューのオフセット
+    /// Portrait:      Viewの左上がToggleの中心 → 右下(x+36, y+36)
+    /// LandscapeLeft: Viewの右上がToggleの中心 → 左下(x-メニュー幅, y+36)
+    /// LandscapeRight:Viewの左下がToggleの中心 → 右上(x+36, y-メニュー高さ)
+    private var flashMenuOffset: CGSize {
+        switch orientationObserver.orientation {
+        case .landscapeLeft:  return CGSize(width: -156, height: 36)
+        case .landscapeRight: return CGSize(width: 36, height: -126)
+        default:              return CGSize(width: 36, height: 36)
         }
     }
 
@@ -122,16 +139,19 @@ struct ContentView: View {
         VStack(spacing: 0) {
             Spacer()
             VStack(spacing: 0) {
-                Text("zoom=\(String(format: "%.2f", cameraManager.zoomFactor))")
-                    .foregroundStyle(.white)
-                    .font(.caption)
-                Slider(value: $cameraManager.zoomFactor, in: minZoomFactor...maxZoomFactor)
-                    .onChange(of: cameraManager.zoomFactor) { _, newValue in
-                        cameraManager.setZoomFactor(newValue)
-                    }
-                    .padding(.horizontal, 40)
-                    .padding(.bottom, 16)
+                ZoomSliderView(
+                    zoomFactor: $cameraManager.zoomFactor,
+                    minZoom: minZoomFactor,
+                    maxZoom: maxZoomFactor,
+                    onChanged: { cameraManager.setZoomFactor($0) }
+                )
+                .rotationEffect(orientationObserver.rotationAngle)
+                .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
+                .padding(.horizontal, orientationObserver.isLandscape ? 0 : 40)
+                .padding(.bottom, 16)
                 ShutterButton()
+                    .rotationEffect(orientationObserver.rotationAngle)
+                    .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
                     .padding(.bottom, 30)
             }
             .padding(.top, 30)
@@ -200,6 +220,26 @@ struct ContentView: View {
 }
 
 // MARK: - Subviews
+
+struct ZoomSliderView: View {
+    @Binding var zoomFactor: CGFloat
+    let minZoom: CGFloat
+    let maxZoom: CGFloat
+    let onChanged: (CGFloat) -> Void
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text("zoom=\(String(format: "%.2f", zoomFactor))")
+                .foregroundStyle(.white)
+                .font(.caption)
+            Slider(value: $zoomFactor, in: minZoom...maxZoom)
+                .onChange(of: zoomFactor) { _, newValue in
+                    onChanged(newValue)
+                }
+                .frame(width: UIScreen.main.bounds.width * 0.8)
+        }
+    }
+}
 
 struct ShutterButton: View {
     var body: some View {
