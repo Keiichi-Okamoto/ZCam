@@ -69,6 +69,7 @@
         - 実機、シミュレータでそれぞれスライダーの値に合わせて対応する画像を拡大縮小する。
 - [x] 402-zoom-layout-fix 402でのレイアウトの問題の修正 (Code Opus 4.7)
     - [x] Layoutの問題の修正
+    - [x] スライダーの上部にTextで倍率を表示する。
 - [ ] 403 FlashModeの選択
     - モードは次の3種類
         - 自動 `bolt.badge.automatic.fill`
