@@ -1,6 +1,7 @@
 @preconcurrency import AVFoundation
 import Combine
 import OSLog
+import SwiftUI
 
 nonisolated private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", category: "CameraManager")
 
@@ -13,10 +14,24 @@ final class CameraManager: NSObject, ObservableObject {
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @Published var zoomFactor: CGFloat = 1.0
 
+    @AppStorage("flashMode") private var storedFlashMode: Int = AVCaptureDevice.FlashMode.auto.rawValue
+    @Published var flashMode: AVCaptureDevice.FlashMode = .auto
+
     private var currentInput: AVCaptureDeviceInput?
 
     // AVCaptureSession の操作は Apple 推奨の専用シリアルキューで実行する
     private let sessionQueue = DispatchQueue(label: "com.example.ZCam.sessionQueue")
+
+    override init() {
+        super.init()
+        flashMode = AVCaptureDevice.FlashMode(rawValue: storedFlashMode) ?? .auto
+    }
+
+    func setFlashMode(_ mode: AVCaptureDevice.FlashMode) {
+        flashMode = mode
+        storedFlashMode = mode.rawValue
+        logger.info("フラッシュモード変更: \(mode.rawValue, privacy: .public)")
+    }
 
     func requestAccess() async {
         if authorizationStatus == .authorized {
