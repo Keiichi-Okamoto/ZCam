@@ -82,9 +82,9 @@
         - 自動, 常にOn, 常にOffの選択
     - [x] 403-3 選択されるとモードを変更し、UserDefaultに保存
         - 次回起動時はそれをで初期値として読み取り設定する。
-- [ ] 403-FlasModeButton
-    - [ ] 403-4 FlashModeのボタンをToggleに変更
-    - [ ] 403-5 ToggleがONになったらToggleの近くに半透明のViewを表示（RoundRect）
+- [x] 403-FlashModeButton
+    - [x] 403-4 FlashModeのボタンをToggleに変更
+    - [x] 403-5 ToggleがONになったらToggleの近くに半透明のViewを表示（RoundRect）
         - 表示位置は Viewの左上がToggleの中心
         - Viewの中にメニューにあった項目を縦にボタンとして表示。
         - 選択されている項目には✓を付ける
