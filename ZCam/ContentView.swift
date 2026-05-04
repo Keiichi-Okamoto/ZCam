@@ -19,36 +19,46 @@ struct ContentView: View {
         if cameraManager.authorizationStatus == .denied || cameraManager.authorizationStatus == .restricted {
             deniedView
         } else {
-            cameraBackground
-                .ignoresSafeArea()
-                .overlay {
-                    focusIndicator
-                }
-                .overlay(alignment: .bottom) {
-                    ZStack(alignment: .bottom) {
-                        LinearGradient(
-                            colors: [.clear, .black.opacity(0.5)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: 160)
-                        VStack(spacing: 0) {
-                            Slider(value: $cameraManager.zoomFactor, in: minZoomFactor...maxZoomFactor)
-                                .onChange(of: cameraManager.zoomFactor) { _, newValue in
-                                    cameraManager.setZoomFactor(newValue)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.horizontal, 40)
-                                .padding(.bottom, 16)
-                            ShutterButton()
-                                .padding(.bottom, 30)
-                        }
+            ZStack {
+                cameraBackground
+                    .ignoresSafeArea()
+                focusIndicator
+                bottomControls
+            }
+            .statusBarHidden(true)
+            .task {
+                await cameraManager.requestAccess()
+            }
+        }
+    }
+
+    // MARK: - Bottom controls
+
+    private var bottomControls: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            VStack(spacing: 0) {
+                Text("zoom=\(String(format: "%.2f", cameraManager.zoomFactor))")
+                    .foregroundStyle(.white)
+                    .font(.caption)
+                Slider(value: $cameraManager.zoomFactor, in: minZoomFactor...maxZoomFactor)
+                    .onChange(of: cameraManager.zoomFactor) { _, newValue in
+                        cameraManager.setZoomFactor(newValue)
                     }
-                }
-                .statusBarHidden(true)
-                .task {
-                    await cameraManager.requestAccess()
-                }
+                    .padding(.horizontal, 40)
+                    .padding(.bottom, 16)
+                ShutterButton()
+                    .padding(.bottom, 30)
+            }
+            .padding(.top, 30)
+            .frame(maxWidth: .infinity)
+            .background(
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.5)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
         }
     }
 
@@ -57,11 +67,16 @@ struct ContentView: View {
     @ViewBuilder
     private var cameraBackground: some View {
         #if targetEnvironment(simulator)
-        Image("simulator_dummy")
-            .resizable()
-            .scaledToFill()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .scaleEffect(cameraManager.zoomFactor)
+        // Color.black を土台にして Image を overlay することで、
+        // Image の固有サイズが ZStack 全体の幅提案に伝播するのを防ぐ。
+        // これがないと、同じ ZStack 内の Slider に「無限大の幅」が提案され描画が破綻する。
+        Color.black
+            .overlay {
+                Image("simulator_dummy")
+                    .resizable()
+                    .scaledToFill()
+                    .scaleEffect(cameraManager.zoomFactor)
+            }
             .clipped()
         #else
         CameraPreviewView(session: cameraManager.session) { devicePoint, screenPoint in

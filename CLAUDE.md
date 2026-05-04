@@ -50,6 +50,8 @@ xcodebuild -project ZCam.xcodeproj -scheme ZCam -destination 'platform=iOS Simul
 
 - PRへのコメント投稿の末尾には必ず以下の署名を付ける
   - `claude code (Dev用)`
+- PR description（本文）の末尾には必ず以下の署名を付ける
+  - `Claude Code Opus4.7`（モデル名はその時のものを使う）
 
 ## ブランチ・PRルール
 
@@ -67,7 +69,6 @@ xcodebuild -project ZCam.xcodeproj -scheme ZCam -destination 'platform=iOS Simul
 - **シミュレータと実機で処理や記述を分けたくなった場合は、必ず岡本さんに確認してから実装する**
 - 現在許可されている分岐は以下のみ:
   - `cameraBackground`: 表示内容（ダミー画像 vs カメラプレビュー）
-  - `zoomFactor` 初期値: シミュレータ=1.5、実機=1.0
 - 上記以外の新たな分岐を追加したい場合は、理由を説明して確認を取る
 
 ## ドキュメント方針
