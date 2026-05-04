@@ -11,6 +11,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
     @State private var focusIndicatorPosition: CGPoint = CGPoint(x: 0.5, y: 0.5)
+    @State private var isFlashMenuOpen = false
 
     private let minZoomFactor: CGFloat = 0.5
     private let maxZoomFactor: CGFloat = 3.0
@@ -23,6 +24,13 @@ struct ContentView: View {
                 cameraBackground
                     .ignoresSafeArea()
                 focusIndicator
+                // メニューが開いている時は背景タップで閉じる
+                if isFlashMenuOpen {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .ignoresSafeArea()
+                        .onTapGesture { isFlashMenuOpen = false }
+                }
                 topControls
                 bottomControls
             }
@@ -48,28 +56,54 @@ struct ContentView: View {
     }
 
     private var flashModeButton: some View {
-        Menu {
+        ZStack(alignment: .topLeading) {
+            // トグルボタン
             Button {
-                cameraManager.setFlashMode(.auto)
+                isFlashMenuOpen.toggle()
             } label: {
-                Label("自動", systemImage: cameraManager.flashMode == .auto ? "checkmark" : "")
+                Image(systemName: flashModeSymbol)
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(isFlashMenuOpen ? .black : .white)
+                    .padding(8)
+                    .background(isFlashMenuOpen ? .white : .black.opacity(0.4), in: Circle())
             }
-            Button {
-                cameraManager.setFlashMode(.on)
-            } label: {
-                Label("常にON", systemImage: cameraManager.flashMode == .on ? "checkmark" : "")
+
+            // フラッシュメニュー（トグルON時に表示）
+            if isFlashMenuOpen {
+                flashModeMenu
+                    .offset(x: 36, y: 36)
             }
-            Button {
-                cameraManager.setFlashMode(.off)
-            } label: {
-                Label("常にOff", systemImage: cameraManager.flashMode == .off ? "checkmark" : "")
-            }
+        }
+    }
+
+    private var flashModeMenu: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            flashModeMenuItem(label: "自動", mode: .auto)
+            Divider().background(.white.opacity(0.3))
+            flashModeMenuItem(label: "常にON", mode: .on)
+            Divider().background(.white.opacity(0.3))
+            flashModeMenuItem(label: "常にOff", mode: .off)
+        }
+        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
+        .fixedSize()
+    }
+
+    private func flashModeMenuItem(label: String, mode: AVCaptureDevice.FlashMode) -> some View {
+        Button {
+            cameraManager.setFlashMode(mode)
+            isFlashMenuOpen = false
         } label: {
-            Image(systemName: flashModeSymbol)
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(.white)
-                .padding(8)
-                .background(.black.opacity(0.4), in: Circle())
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .opacity(cameraManager.flashMode == mode ? 1 : 0)
+                Text(label)
+                    .font(.system(size: 15))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .frame(minWidth: 120, alignment: .leading)
         }
     }
 

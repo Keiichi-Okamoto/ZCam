@@ -82,11 +82,25 @@
         - 自動, 常にOn, 常にOffの選択
     - [x] 403-3 選択されるとモードを変更し、UserDefaultに保存
         - 次回起動時はそれをで初期値として読み取り設定する。
+- [ ] 403-FlasModeButton
+    - [ ] 403-4 FlashModeのボタンをToggleに変更
+    - [ ] 403-5 ToggleがONになったらToggleの近くに半透明のViewを表示（RoundRect）
+        - 表示位置は Viewの左上がToggleの中心
+        - Viewの中にメニューにあった項目を縦にボタンとして表示。
+        - 選択されている項目には✓を付ける
+        - 選択されるとモードを変更し、UserDefaultに保存
+        - 次回起動時はそれをで初期値として読み取り設定する。        
 - [ ] 404 端末のローテーション
-    - ローテーション時には画面上のボタン等も中心を支点としてローテーション
-    - スライダー
+    - [ ] 404-1 Portrait, Landscape Left, Landscape Rightに対応。Upside Downは対象外
+    - [ ] 404-2 ローテーション時には画面上のToggleも中心を支点としてローテーション（アニメーション付き）
+    - [ ] 404-3 ToggleがONの時のViewもローテーション（アニメーション付き）
+        - Portraitから時計方向に90°回転させた: Viewの右上がToggleの中心
+        - Portraitから反時計方向に90°回転させた: Viewの左下がToggleの中心
+    - [ ] 404-4 スライダー
+        - スライダーと倍率を示すTextはまとめて1つのViewにする。
         - Portrait: シャッターボタンの上部に表示。画面横幅の80% 
         - Landscape: Landscapeにした時の画面下部に表示。Landscapeにした時の画面幅の80%
+        - ローテーション時はアニメーション付きで行う
 
 ## Chapter 5
     
