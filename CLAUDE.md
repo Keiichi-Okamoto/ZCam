@@ -67,7 +67,6 @@ xcodebuild -project ZCam.xcodeproj -scheme ZCam -destination 'platform=iOS Simul
 - **シミュレータと実機で処理や記述を分けたくなった場合は、必ず岡本さんに確認してから実装する**
 - 現在許可されている分岐は以下のみ:
   - `cameraBackground`: 表示内容（ダミー画像 vs カメラプレビュー）
-  - `zoomFactor` 初期値: シミュレータ=1.5、実機=1.0
 - 上記以外の新たな分岐を追加したい場合は、理由を説明して確認を取る
 
 ## ドキュメント方針

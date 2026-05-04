@@ -11,11 +11,7 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
-    #if targetEnvironment(simulator)
-    @Published var zoomFactor: CGFloat = 1.5
-    #else
     @Published var zoomFactor: CGFloat = 1.0
-    #endif
 
     private var currentInput: AVCaptureDeviceInput?
 
