@@ -1,7 +1,6 @@
 @preconcurrency import AVFoundation
 import Combine
 import OSLog
-import SwiftUI
 
 nonisolated private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", category: "CameraManager")
 
@@ -14,7 +13,6 @@ final class CameraManager: NSObject, ObservableObject {
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @Published var zoomFactor: CGFloat = 1.0
 
-    @AppStorage("flashMode") private var storedFlashMode: Int = AVCaptureDevice.FlashMode.auto.rawValue
     @Published var flashMode: AVCaptureDevice.FlashMode = .auto
 
     private var currentInput: AVCaptureDeviceInput?
@@ -24,12 +22,13 @@ final class CameraManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        flashMode = AVCaptureDevice.FlashMode(rawValue: storedFlashMode) ?? .auto
+        let raw = UserDefaults.standard.integer(forKey: "flashMode")
+        flashMode = AVCaptureDevice.FlashMode(rawValue: raw) ?? .auto
     }
 
     func setFlashMode(_ mode: AVCaptureDevice.FlashMode) {
         flashMode = mode
-        storedFlashMode = mode.rawValue
+        UserDefaults.standard.set(mode.rawValue, forKey: "flashMode")
         logger.info("フラッシュモード変更: \(mode.rawValue, privacy: .public)")
     }
 
