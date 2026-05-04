@@ -13,10 +13,24 @@ final class CameraManager: NSObject, ObservableObject {
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @Published var zoomFactor: CGFloat = 1.0
 
+    @Published var flashMode: AVCaptureDevice.FlashMode = .auto
+
     private var currentInput: AVCaptureDeviceInput?
 
     // AVCaptureSession の操作は Apple 推奨の専用シリアルキューで実行する
     private let sessionQueue = DispatchQueue(label: "com.example.ZCam.sessionQueue")
+
+    override init() {
+        super.init()
+        let raw = UserDefaults.standard.integer(forKey: "flashMode")
+        flashMode = AVCaptureDevice.FlashMode(rawValue: raw) ?? .auto
+    }
+
+    func setFlashMode(_ mode: AVCaptureDevice.FlashMode) {
+        flashMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: "flashMode")
+        logger.info("フラッシュモード変更: \(mode.rawValue, privacy: .public)")
+    }
 
     func requestAccess() async {
         if authorizationStatus == .authorized {

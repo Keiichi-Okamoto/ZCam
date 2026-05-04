@@ -23,12 +23,62 @@ struct ContentView: View {
                 cameraBackground
                     .ignoresSafeArea()
                 focusIndicator
+                topControls
                 bottomControls
             }
             .statusBarHidden(true)
             .task {
                 await cameraManager.requestAccess()
             }
+        }
+    }
+
+    // MARK: - Top controls
+
+    private var topControls: some View {
+        VStack {
+            HStack {
+                flashModeButton
+                    .padding(.leading, 16)
+                Spacer()
+            }
+            .padding(.top, 16)
+            Spacer()
+        }
+    }
+
+    private var flashModeButton: some View {
+        Menu {
+            Button {
+                cameraManager.setFlashMode(.auto)
+            } label: {
+                Label("自動", systemImage: cameraManager.flashMode == .auto ? "checkmark" : "")
+            }
+            Button {
+                cameraManager.setFlashMode(.on)
+            } label: {
+                Label("常にON", systemImage: cameraManager.flashMode == .on ? "checkmark" : "")
+            }
+            Button {
+                cameraManager.setFlashMode(.off)
+            } label: {
+                Label("常にOff", systemImage: cameraManager.flashMode == .off ? "checkmark" : "")
+            }
+        } label: {
+            Image(systemName: flashModeSymbol)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(8)
+                .background(.black.opacity(0.4), in: Circle())
+        }
+    }
+
+    private var flashModeSymbol: String {
+        switch cameraManager.flashMode {
+        case .auto: return "bolt.badge.automatic.fill"
+        case .on:   return "bolt.fill"
+        case .off:  return "bolt.slash.fill"
+        @unknown default: return "bolt.badge.automatic.fill"
         }
     }
 
