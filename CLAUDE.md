@@ -50,6 +50,8 @@ xcodebuild -project ZCam.xcodeproj -scheme ZCam -destination 'platform=iOS Simul
 
 - PRへのコメント投稿の末尾には必ず以下の署名を付ける
   - `claude code (Dev用)`
+- PR description（本文）の末尾には必ず以下の署名を付ける
+  - `Claude Code Opus4.7`（モデル名はその時のものを使う）
 
 ## ブランチ・PRルール
 
