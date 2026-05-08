@@ -90,16 +90,16 @@
         - 選択されている項目には✓を付ける
         - 選択されるとモードを変更し、UserDefaultに保存
         - 次回起動時はそれをで初期値として読み取り設定する。        
-- [ ] 404 端末のローテーション
-    - [ ] 404-1 Portrait, Landscape Left, Landscape Rightに対応。Upside Downは対象外
+- [x] 404 端末のローテーション
+    - [x] 404-1 Portrait, Landscape Left, Landscape Rightに対応。Upside Downは対象外
         - ローテーションには`.rotationEffect`を使用
         - 位置の移動には`orientationObserver.orientation`を監視し`.offset`を変更
         - 大きさの変更には`orientationObserver.orientation`を監視し`.frame(width:)｀を変更
-    - [ ] 404-2 ローテーション時には画面上のToggleも中心を支点としてローテーション（アニメーション付き）
-    - [ ] 404-3 ToggleがONの時のViewもローテーションと位置変更（アニメーション付き）
+    - [x] 404-2 ローテーション時には画面上のToggleも中心を支点としてローテーション（アニメーション付き）
+    - [x] 404-3 ToggleがONの時のViewもローテーションと位置変更（アニメーション付き）
         - Portraitから時計方向に90°回転させた: Viewの右上がToggleの中心
         - Portraitから反時計方向に90°回転させた: Viewの左下がToggleの中心
-    - [ ] 404-4 スライダーのローテーションと位置変更とサイズ変更（アニメーション付き）
+    - [x] 404-4 スライダーのローテーションと位置変更とサイズ変更（アニメーション付き）
         - スライダーと倍率を示すTextはまとめて1つのViewにする。
         - Portrait: シャッターボタンの上部に表示。画面横幅の80% 
         - Landscape: Landscapeにした時の画面下部に表示。Landscapeにした時の画面幅の80%
@@ -151,7 +151,7 @@
 
 ## Chapter 8
 
-- [x] 801 FocusPoint の回転ずれを MetalView 化のタイミングで再実装する
+- [ ] 801 FocusPoint の回転ずれを MetalView 化のタイミングで再実装する
     - 現状の `AVCaptureVideoPreviewLayer` + SwiftUI overlay 前提の補正は、Landscape で表示座標とタップ座標の整合が取りづらく、暫定修正を入れても再燃しやすい
     - `devicePoint` を正本にして、表示側は renderer で `devicePoint -> screenPoint` の変換を 1 箇所に集約する
     - `MTKView` 化後は、回転・crop・safe area・drawable size を含めた座標変換を renderer 側に閉じ込める
