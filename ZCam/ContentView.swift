@@ -23,6 +23,14 @@ struct ContentView: View {
                     cameraBackground
                         .ignoresSafeArea()
                     focusIndicator
+
+                    // メニューが開いている時は背景タップで閉じる
+                    if isFlashMenuOpen {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .ignoresSafeArea()
+                            .onTapGesture { isFlashMenuOpen = false }
+                    }
                     
                     SliderView(viewSize: proxy.size,
                                cameraManager: cameraManager,
@@ -34,14 +42,6 @@ struct ContentView: View {
                     TopControls(cameraManager: cameraManager,
                                 orientationObserver: orientationObserver,
                                 isFlashMenuOpen: $isFlashMenuOpen)
-
-                    // メニューが開いている時は背景タップで閉じる
-                    if isFlashMenuOpen {
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .ignoresSafeArea()
-                            .onTapGesture { isFlashMenuOpen = false }
-                    }
                 }
                 .statusBarHidden(true)
                 .task {

@@ -24,7 +24,12 @@ final class OrientationObserver: ObservableObject {
                 break
             }
         }
-        self.orientation = UIDevice.current.orientation
+        switch UIDevice.current.orientation {
+        case .portrait, .landscapeLeft, .landscapeRight:
+            self.orientation = UIDevice.current.orientation
+        default:
+            break
+        }
     }
 
     deinit {
