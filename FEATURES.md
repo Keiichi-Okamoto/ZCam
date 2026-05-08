@@ -150,4 +150,16 @@
             - 全ソースをチェックし必要な項目を記述する
 
 ## Chapter 8
-    
+
+- [ ] 801 FocusPoint の回転ずれを MetalView 化のタイミングで再実装する
+    - 現状の `AVCaptureVideoPreviewLayer` + SwiftUI overlay 前提の補正は、Landscape で表示座標とタップ座標の整合が取りづらく、暫定修正を入れても再燃しやすい
+    - `devicePoint` を正本にして、表示側は renderer で `devicePoint -> screenPoint` の変換を 1 箇所に集約する
+    - `MTKView` 化後は、回転・crop・safe area・drawable size を含めた座標変換を renderer 側に閉じ込める
+    - 実装案:
+        - `FocusPointModel` を `devicePoint` 中心に持たせる
+        - `Renderer` に `devicePoint -> layerPoint` の変換関数を持たせる
+        - タップは `screenPoint` から `devicePoint` に戻すのではなく、プレビューの実表示領域を基準に一度正規化してから変換する
+    - 受け入れ条件:
+        - Portrait / Landscape Left / Landscape Right で FocusPoint が表示中心と一致する
+        - Double Tap で中心復帰が安定する
+        - 既存 UI レイアウトに副作用を出さない
