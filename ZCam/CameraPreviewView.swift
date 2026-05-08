@@ -42,7 +42,13 @@ struct CameraPreviewView: UIViewRepresentable {
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard let previewView = gesture.view as? PreviewView else { return }
             let layerPoint = gesture.location(in: previewView)
-            let devicePoint = previewView.previewLayer.captureDevicePointConverted(fromLayerPoint: layerPoint)
+            let interfaceOrientation = previewView.window?.windowScene?.interfaceOrientation ?? .portrait
+            let convertedPoint = convertedLayerPoint(
+                from: layerPoint,
+                in: previewView.bounds,
+                interfaceOrientation: interfaceOrientation
+            )
+            let devicePoint = previewView.previewLayer.captureDevicePointConverted(fromLayerPoint: convertedPoint)
             let screenPoint = CGPoint(
                 x: layerPoint.x / previewView.bounds.width,
                 y: layerPoint.y / previewView.bounds.height
@@ -52,6 +58,30 @@ struct CameraPreviewView: UIViewRepresentable {
 
         @objc func handleDoubleTap() {
             onTap?(CGPoint(x: 0.5, y: 0.5), CGPoint(x: 0.5, y: 0.5))
+        }
+
+        private func convertedLayerPoint(from point: CGPoint,
+                                         in bounds: CGRect,
+                                         interfaceOrientation: UIInterfaceOrientation) -> CGPoint {
+            guard bounds.width > 0, bounds.height > 0 else { return point }
+
+            let normalizedX = point.x / bounds.width
+            let normalizedY = point.y / bounds.height
+
+            switch interfaceOrientation {
+            case .landscapeLeft:
+                return CGPoint(
+                    x: normalizedY * bounds.width,
+                    y: (1 - normalizedX) * bounds.height
+                )
+            case .landscapeRight:
+                return CGPoint(
+                    x: (1 - normalizedY) * bounds.width,
+                    y: normalizedX * bounds.height
+                )
+            default:
+                return point
+            }
         }
     }
 }
@@ -72,7 +102,7 @@ final class PreviewView: UIView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         previewLayer.frame = bounds
-        // 404（端末ローテーション）実装まではportrait固定（90°）
+        // プレビュー表示は portrait 基準で固定する
         if let connection = previewLayer.connection, connection.isVideoRotationAngleSupported(90) {
             connection.videoRotationAngle = 90
         }

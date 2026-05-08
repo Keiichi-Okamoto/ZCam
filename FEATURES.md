@@ -90,33 +90,76 @@
         - 選択されている項目には✓を付ける
         - 選択されるとモードを変更し、UserDefaultに保存
         - 次回起動時はそれをで初期値として読み取り設定する。        
-- [ ] 404 端末のローテーション
-    - [ ] 404-1 Portrait, Landscape Left, Landscape Rightに対応。Upside Downは対象外
-    - [ ] 404-2 ローテーション時には画面上のToggleも中心を支点としてローテーション（アニメーション付き）
-    - [ ] 404-3 ToggleがONの時のViewもローテーション（アニメーション付き）
+- [x] 404 端末のローテーション
+    - [x] 404-1 Portrait, Landscape Left, Landscape Rightに対応。Upside Downは対象外
+        - ローテーションには`.rotationEffect`を使用
+        - 位置の移動には`orientationObserver.orientation`を監視し`.offset`を変更
+        - 大きさの変更には`orientationObserver.orientation`を監視し`.frame(width:)｀を変更
+    - [x] 404-2 ローテーション時には画面上のToggleも中心を支点としてローテーション（アニメーション付き）
+    - [x] 404-3 ToggleがONの時のViewもローテーションと位置変更（アニメーション付き）
         - Portraitから時計方向に90°回転させた: Viewの右上がToggleの中心
         - Portraitから反時計方向に90°回転させた: Viewの左下がToggleの中心
-    - [ ] 404-4 スライダー
+    - [x] 404-4 スライダーのローテーションと位置変更とサイズ変更（アニメーション付き）
         - スライダーと倍率を示すTextはまとめて1つのViewにする。
         - Portrait: シャッターボタンの上部に表示。画面横幅の80% 
         - Landscape: Landscapeにした時の画面下部に表示。Landscapeにした時の画面幅の80%
-        - ローテーション時はアニメーション付きで行う
+
+- [ ] 402-fix-zoom-functionality
+    - [ ] `isVirtualDevice == true`で`constituentDevices`の中に`AVCaptureDeviceTypeBuiltInUltraWideCamera`がある場合
+        - Sliderの倍率を `0.5 - 3.0`とする
+        - 初期値は`1.0`
+        - `videoZoomFactor`はSliderの値の2倍。
+        - 実際の設定前に`minAvailableVideoZoomFactor...maxAvailableVideoZoomFactor`にclamp
+    - [ ] それ以外の場合
+        - Sliderの倍率を `1.0 - 3.0` とする
+        - 初期値は`1.0`
+        - `videoZoomFactor`はSliderの値そのまま
+        - 実際の設定前に`minAvailableVideoZoomFactor...maxAvailableVideoZoomFactor`にclamp
 
 ## Chapter 5
-    
+    - [ ] 501 CIFIlterの実装
+        - CIColorPosterize
+            - 画像の抽象化
+        - CILineOverlay
+            - 画像の中の輪郭を抽出
+        - CIMultiplyBlendMode
+            - 上記2つのフィルタの出力を合成
+    - [ ] 502 パラメータ調整用パネルの表示
+        - [ ] 502-1 画面右上に`slider.horizontal.3`を表示（ローテート対象）
+        - [ ] 502-2 `slider.horizontal.3`でパラメータ表示のためのViewの表示
+        - [ ] 502-3 Viewは指でドラック可能
+        - [ ] 502-4 端末をローテートする事でViewもローテート
+        - [ ] 502-5 Viewには以下の3つを操作するSliderを表示 (タイトルをスライダの上部に)
+            - inputLevels（CIColorPosterize）
+            - inputEdgeIntensity（CILineOverlay）
+            - inputThreshold（CILineOverlay）
+        - [ ] 502-6 各Sliderの移動で即時に画面に反映
+            - UserDefaultsに保存し、次回起動時にはそれを参照する
+        
 ## Chapter 6
-    - `UIRequiredDeviceCapabilities`に`metal`を追加
-    - `CALayer`を`MTKView`に置き換える
-    
+    - [ ] `UIRequiredDeviceCapabilities`に`metal`を追加
+    - [ ] `CALayer`を`MTKView`に置き換える
+    - [ ] 'MTKViewDelegate'の実装
 
 ## Chapter 7
-    - `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加
+    - [ ] `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加
         - 「撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。」
-    - デバイスの向きに合わせて画像を回転させて保存
-
-
-    - PrivacyInfoの追加
-        - 全ソースをチェックし必要な項目を記述する
+    - [ ] デバイスの向きに合わせて画像を回転させて保存
+    - 最後に...
+        - [ ] PrivacyInfoの追加
+            - 全ソースをチェックし必要な項目を記述する
 
 ## Chapter 8
-    
+
+- [ ] 801 FocusPoint の回転ずれを MetalView 化のタイミングで再実装する
+    - 現状の `AVCaptureVideoPreviewLayer` + SwiftUI overlay 前提の補正は、Landscape で表示座標とタップ座標の整合が取りづらく、暫定修正を入れても再燃しやすい
+    - `devicePoint` を正本にして、表示側は renderer で `devicePoint -> screenPoint` の変換を 1 箇所に集約する
+    - `MTKView` 化後は、回転・crop・safe area・drawable size を含めた座標変換を renderer 側に閉じ込める
+    - 実装案:
+        - `FocusPointModel` を `devicePoint` 中心に持たせる
+        - `Renderer` に `devicePoint -> layerPoint` の変換関数を持たせる
+        - タップは `screenPoint` から `devicePoint` に戻すのではなく、プレビューの実表示領域を基準に一度正規化してから変換する
+    - 受け入れ条件:
+        - Portrait / Landscape Left / Landscape Right で FocusPoint が表示中心と一致する
+        - Double Tap で中心復帰が安定する
+        - 既存 UI レイアウトに副作用を出さない
