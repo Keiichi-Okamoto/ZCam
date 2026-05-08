@@ -24,6 +24,7 @@ final class OrientationObserver: ObservableObject {
                 break
             }
         }
+        self.orientation = UIDevice.current.orientation
     }
 
     deinit {
@@ -42,7 +43,7 @@ final class OrientationObserver: ObservableObject {
         }
     }
 
-    var isLandscapeLeft:  Bool { orientation == .landscapeLeft }
+    var isLandscapeLeft: Bool { orientation == .landscapeLeft }
     var isLandscapeRight: Bool { orientation == .landscapeRight }
-    var isLandscape:      Bool { isLandscapeLeft || isLandscapeRight }
+    var isLandscape: Bool { isLandscapeLeft || isLandscapeRight }
 }

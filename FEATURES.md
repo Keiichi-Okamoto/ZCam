@@ -90,17 +90,31 @@
         - 選択されている項目には✓を付ける
         - 選択されるとモードを変更し、UserDefaultに保存
         - 次回起動時はそれをで初期値として読み取り設定する。        
-- [x] 404 端末のローテーション
-    - [x] 404-1 Portrait, Landscape Left, Landscape Rightに対応。Upside Downは対象外
-    - [x] 404-2 ローテーション時には画面上のToggleも中心を支点としてローテーション（アニメーション付き）
-    - [x] 404-3 ToggleがONの時のViewもローテーション（アニメーション付き）
+- [ ] 404 端末のローテーション
+    - [ ] 404-1 Portrait, Landscape Left, Landscape Rightに対応。Upside Downは対象外
+        - ローテーションには`.rotationEffect`を使用
+        - 位置の移動には`orientationObserver.orientation`を監視し`.offset`を変更
+        - 大きさの変更には`orientationObserver.orientation`を監視し`.frame(width:)｀を変更
+    - [ ] 404-2 ローテーション時には画面上のToggleも中心を支点としてローテーション（アニメーション付き）
+    - [ ] 404-3 ToggleがONの時のViewもローテーションと位置変更（アニメーション付き）
         - Portraitから時計方向に90°回転させた: Viewの右上がToggleの中心
         - Portraitから反時計方向に90°回転させた: Viewの左下がToggleの中心
-    - [x] 404-4 スライダー
+    - [ ] 404-4 スライダーのローテーションと位置変更とサイズ変更（アニメーション付き）
         - スライダーと倍率を示すTextはまとめて1つのViewにする。
         - Portrait: シャッターボタンの上部に表示。画面横幅の80% 
         - Landscape: Landscapeにした時の画面下部に表示。Landscapeにした時の画面幅の80%
-        - ローテーション時はアニメーション付きで行う
+
+- [ ] 402-fix-zoom-functionality
+    - [ ] `isVirtualDevice == true`で`constituentDevices`の中に`AVCaptureDeviceTypeBuiltInUltraWideCamera`がある場合
+        - Sliderの倍率を `0.5 - 3.0`とする
+        - 初期値は`1.0`
+        - `videoZoomFactor`はSliderの値の2倍。
+        - 実際の設定前に`minAvailableVideoZoomFactor...maxAvailableVideoZoomFactor`にclamp
+    - [ ] それ以外の場合
+        - Sliderの倍率を `1.0 - 3.0` とする
+        - 初期値は`1.0`
+        - `videoZoomFactor`はSliderの値そのまま
+        - 実際の設定前に`minAvailableVideoZoomFactor...maxAvailableVideoZoomFactor`にclamp
 
 ## Chapter 5
     - [ ] 501 CIFIlterの実装
@@ -123,16 +137,17 @@
             - UserDefaultsに保存し、次回起動時にはそれを参照する
         
 ## Chapter 6
-    - `UIRequiredDeviceCapabilities`に`metal`を追加
-    - `CALayer`を`MTKView`に置き換える
-    - 'MTKViewDelegate'の実装
+    - [ ] `UIRequiredDeviceCapabilities`に`metal`を追加
+    - [ ] `CALayer`を`MTKView`に置き換える
+    - [ ] 'MTKViewDelegate'の実装
 
 ## Chapter 7
-    - `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加
+    - [ ] `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加
         - 「撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。」
-    - デバイスの向きに合わせて画像を回転させて保存
-    - PrivacyInfoの追加
-        - 全ソースをチェックし必要な項目を記述する
+    - [ ] デバイスの向きに合わせて画像を回転させて保存
+    - 最後に...
+        - [ ] PrivacyInfoの追加
+            - 全ソースをチェックし必要な項目を記述する
 
 ## Chapter 8
     

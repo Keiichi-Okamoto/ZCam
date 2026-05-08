@@ -14,160 +14,300 @@ struct ContentView: View {
     @State private var focusIndicatorPosition: CGPoint = CGPoint(x: 0.5, y: 0.5)
     @State private var isFlashMenuOpen = false
 
-    private let minZoomFactor: CGFloat = 0.5
-    private let maxZoomFactor: CGFloat = 3.0
-
     var body: some View {
-        if cameraManager.authorizationStatus == .denied || cameraManager.authorizationStatus == .restricted {
-            deniedView
-        } else {
-            ZStack {
-                cameraBackground
-                    .ignoresSafeArea()
-                focusIndicator
-                // メニューが開いている時は背景タップで閉じる
-                if isFlashMenuOpen {
-                    Color.clear
-                        .contentShape(Rectangle())
+        GeometryReader { proxy in
+            if cameraManager.authorizationStatus == .denied || cameraManager.authorizationStatus == .restricted {
+                deniedView
+            } else {
+                ZStack {
+                    cameraBackground
                         .ignoresSafeArea()
-                        .onTapGesture { isFlashMenuOpen = false }
+                    focusIndicator
+                    
+                    SliderView(viewSize: proxy.size,
+                               cameraManager: cameraManager,
+                               orientationObserver: orientationObserver)
+
+                    ShutterButtonView(viewSize: proxy.size,
+                                      orientationObserver: orientationObserver)
+
+                    TopControls(cameraManager: cameraManager,
+                                orientationObserver: orientationObserver,
+                                isFlashMenuOpen: $isFlashMenuOpen)
+
+                    // メニューが開いている時は背景タップで閉じる
+                    if isFlashMenuOpen {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .ignoresSafeArea()
+                            .onTapGesture { isFlashMenuOpen = false }
+                    }
                 }
-                topControls
-                bottomControls
-            }
-            .statusBarHidden(true)
-            .task {
-                await cameraManager.requestAccess()
+                .statusBarHidden(true)
+                .task {
+                    await cameraManager.requestAccess()
+                }
             }
         }
     }
 
     // MARK: - Top controls
 
-    private var topControls: some View {
-        VStack {
-            HStack {
-                flashModeButton
-                    .padding(.leading, 16)
+    private struct TopControls: View {
+        @ObservedObject var cameraManager: CameraManager
+        @ObservedObject var orientationObserver: OrientationObserver
+        @Binding var isFlashMenuOpen: Bool
+        var body: some View {
+            VStack {
+                HStack {
+                    FlashModeButton(cameraManager: cameraManager,
+                                    orientationObserver: orientationObserver,
+                                    isFlashMenuOpen: $isFlashMenuOpen)
+                        .padding(.leading, 16)
+                    Spacer()
+                }
+                .padding(.top, 16)
                 Spacer()
             }
-            .padding(.top, 16)
-            Spacer()
         }
     }
 
-    private var flashModeButton: some View {
-        ZStack(alignment: .topLeading) {
-            // トグルボタン
+    // MARK: - FlashModeButton
+    private struct FlashModeButton: View {
+        @ObservedObject var cameraManager: CameraManager
+        @ObservedObject var orientationObserver: OrientationObserver
+        @Binding var isFlashMenuOpen: Bool
+        let flashModeMenuOffset = CGSize(width: 36, height: 36)
+
+        var body: some View {
+            ZStack(alignment: .topLeading) {
+                // トグルボタン
+                Button {
+                    isFlashMenuOpen.toggle()
+                } label: {
+                    Image(systemName: flashModeSymbol)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(isFlashMenuOpen ? .black : .white)
+                        .padding(8)
+                        .background(isFlashMenuOpen ? .white : .black.opacity(0.4), in: Circle())
+                }
+                .rotationEffect(orientationObserver.rotationAngle)
+                .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
+                
+                // フラッシュメニュー（トグルON時に表示）
+                if isFlashMenuOpen {
+                    FlashModeMenu(cameraManager: cameraManager,
+                                  isFlashMenuOpen: $isFlashMenuOpen)
+                        .rotationEffect(orientationObserver.rotationAngle)
+                        .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
+                        .offset(flashModeMenuOffset)
+                }
+            }
+        }
+        
+        private var flashModeSymbol: String {
+            switch cameraManager.flashMode {
+            case .auto: return "bolt.badge.automatic.fill"
+            case .on:   return "bolt.fill"
+            case .off:  return "bolt.slash.fill"
+            @unknown default: return "bolt.badge.automatic.fill"
+            }
+        }
+    }
+
+    private struct FlashModeMenu: View {
+        @ObservedObject var cameraManager: CameraManager
+        @Binding var isFlashMenuOpen: Bool
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 0) {
+                FlashModeMenuItem(cameraManager: cameraManager,
+                                  isFlashMenuOpen: $isFlashMenuOpen,
+                                  label: "自動",
+                                  mode: .auto)
+                Divider().background(.white.opacity(0.3))
+
+                FlashModeMenuItem(cameraManager: cameraManager,
+                                  isFlashMenuOpen: $isFlashMenuOpen,
+                                  label: "常にON",
+                                  mode: .on)
+                Divider().background(.white.opacity(0.3))
+
+                FlashModeMenuItem(cameraManager: cameraManager,
+                                  isFlashMenuOpen: $isFlashMenuOpen,
+                                  label: "常にOff",
+                                  mode: .off)
+            }
+            .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
+            .fixedSize()
+        }
+    }
+
+    private struct FlashModeMenuItem: View {
+        @ObservedObject var cameraManager: CameraManager
+        @Binding var isFlashMenuOpen: Bool
+        let label: String
+        let mode: AVCaptureDevice.FlashMode
+        var body: some View {
             Button {
-                isFlashMenuOpen.toggle()
+                cameraManager.setFlashMode(mode)
+                isFlashMenuOpen = false
             } label: {
-                Image(systemName: flashModeSymbol)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundStyle(isFlashMenuOpen ? .black : .white)
-                    .padding(8)
-                    .background(isFlashMenuOpen ? .white : .black.opacity(0.4), in: Circle())
-            }
-            .rotationEffect(orientationObserver.rotationAngle)
-            .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
-
-            // フラッシュメニュー（トグルON時に表示）
-            if isFlashMenuOpen {
-                flashModeMenu
-                    .rotationEffect(orientationObserver.rotationAngle)
-                    .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
-                    .offset(flashMenuOffset)
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .opacity(cameraManager.flashMode == mode ? 1 : 0)
+                    Text(label)
+                        .font(.system(size: 15))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .frame(minWidth: 120, alignment: .leading)
             }
         }
     }
 
-    /// 向きに応じたメニューのオフセット
-    /// Portrait:      Viewの左上がToggleの中心 → 右下(x+36, y+36)
-    /// LandscapeLeft: Viewの右上がToggleの中心 → 左下(x-メニュー幅, y+36)
-    /// LandscapeRight:Viewの左下がToggleの中心 → 右上(x+36, y-メニュー高さ)
-    private var flashMenuOffset: CGSize {
-        switch orientationObserver.orientation {
-        case .landscapeLeft:  return CGSize(width: -156, height: 36)
-        case .landscapeRight: return CGSize(width: 36, height: -126)
-        default:              return CGSize(width: 36, height: 36)
-        }
-    }
+    // MARK: - Slider
+    private struct SliderView: View {
+        let viewSize: CGSize
+        @ObservedObject var cameraManager: CameraManager
+        @ObservedObject var orientationObserver: OrientationObserver
+        private let minZoomFactor: CGFloat = 0.5
+        private let maxZoomFactor: CGFloat = 3.0
+        @State var sliderWidth: CGFloat = 0
+        @State var sliderOffset = CGSize.zero
 
-    private var flashModeMenu: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            flashModeMenuItem(label: "自動", mode: .auto)
-            Divider().background(.white.opacity(0.3))
-            flashModeMenuItem(label: "常にON", mode: .on)
-            Divider().background(.white.opacity(0.3))
-            flashModeMenuItem(label: "常にOff", mode: .off)
-        }
-        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
-        .fixedSize()
-    }
-
-    private func flashModeMenuItem(label: String, mode: AVCaptureDevice.FlashMode) -> some View {
-        Button {
-            cameraManager.setFlashMode(mode)
-            isFlashMenuOpen = false
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 12, weight: .bold))
-                    .opacity(cameraManager.flashMode == mode ? 1 : 0)
-                Text(label)
-                    .font(.system(size: 15))
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .frame(minWidth: 120, alignment: .leading)
-        }
-    }
-
-    private var flashModeSymbol: String {
-        switch cameraManager.flashMode {
-        case .auto: return "bolt.badge.automatic.fill"
-        case .on:   return "bolt.fill"
-        case .off:  return "bolt.slash.fill"
-        @unknown default: return "bolt.badge.automatic.fill"
-        }
-    }
-
-    // MARK: - Bottom controls
-
-    private var bottomControls: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            VStack(spacing: 0) {
+        var body: some View {
+            HStack {
                 ZoomSliderView(
                     zoomFactor: $cameraManager.zoomFactor,
                     minZoom: minZoomFactor,
                     maxZoom: maxZoomFactor,
                     onChanged: { cameraManager.setZoomFactor($0) }
                 )
+                .frame(width: sliderWidth)
                 .rotationEffect(orientationObserver.rotationAngle)
-                .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
-                .padding(.horizontal, orientationObserver.isLandscape ? 0 : 40)
-                .padding(.bottom, 16)
+                .animation(.easeInOut(duration: 0.3),
+                           value: orientationObserver.rotationAngle)
+                .offset(sliderOffset)
+                .padding(.horizontal, 0)
+                .onChange(of: orientationObserver.orientation) { _, orientation in
+                    withAnimation {
+                        sliderWidth(orientation)
+                        sliderOffset(orientation)
+                    }
+                }
+                .onAppear {
+                    let orientation = orientationObserver.orientation
+                    sliderWidth(orientation)
+                    sliderOffset(orientation)
+                }
+            }
+        }
+
+        private func sliderWidth(_ orientation: UIDeviceOrientation) {
+            let widthRatio = 0.8
+            switch orientation {
+            case .portrait:
+                sliderWidth = viewSize.width * widthRatio
+            case .landscapeLeft, .landscapeRight:
+                sliderWidth = viewSize.height * widthRatio
+            default:
+                break
+            }
+        }
+
+        private func sliderOffset(_ orientation: UIDeviceOrientation) {
+            let screenWidth = viewSize.width
+            let screenHeight = viewSize.height
+
+            // ZStack は中央基準なので、offset は画面中心からの相対距離で指定する
+            // 各値は実機で目視確認しながら試行錯誤で決定した
+            switch orientation {
+            case .portrait:
+                sliderOffset = CGSize(width: 0, height: screenHeight / 2 - 180)
+            case .landscapeLeft:
+                sliderOffset = CGSize(width: -screenWidth * 3 / 4 + 50, height: 0)
+            case .landscapeRight:
+                sliderOffset = CGSize(width: screenWidth / 4 - 31.0 - 50, height: 0)
+            default:
+                break
+            }
+        }
+    }
+
+    private struct ZoomSliderView: View {
+        @Binding var zoomFactor: CGFloat
+        let minZoom: CGFloat
+        let maxZoom: CGFloat
+        let onChanged: (CGFloat) -> Void
+
+        var body: some View {
+            VStack(spacing: 2) {
+                Text("zoom=\(String(format: "%.2f", zoomFactor))")
+                    .foregroundStyle(.white)
+                    .font(.caption)
+                Slider(value: $zoomFactor, in: minZoom...maxZoom)
+                    .onChange(of: zoomFactor) { _, newValue in
+                        onChanged(newValue)
+                    }
+            }
+        }
+    }
+
+    // MARK: - ShutterButton
+    private struct ShutterButtonView: View {
+        let viewSize: CGSize
+        @ObservedObject var orientationObserver: OrientationObserver
+        @State var shutterButtonOffset = CGSize.zero
+
+        var body: some View {
+            HStack(alignment: .center) {
                 ShutterButton()
                     .rotationEffect(orientationObserver.rotationAngle)
-                    .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
-                    .padding(.bottom, 30)
+                    .offset(shutterButtonOffset)
+                    .onChange(of: orientationObserver.orientation) { _, orientation in
+                        withAnimation {
+                            shutterButtonOffset(orientation)
+                        }
+                    }
+                    .onAppear {
+                        let orientation = orientationObserver.orientation
+                        shutterButtonOffset(orientation)
+                    }
             }
-            .padding(.top, 30)
-            .frame(maxWidth: .infinity)
-            .background(
-                LinearGradient(
-                    colors: [.clear, .black.opacity(0.5)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
+        }
+
+        private func shutterButtonOffset(_ orientation: UIDeviceOrientation) {
+            let screenHeight = viewSize.height
+            // ZStack は中央基準なので、offset は画面中心からの相対距離で指定する
+            // 各値は実機で目視確認しながら試行錯誤で決定した
+            switch orientation {
+            case .portrait:
+                shutterButtonOffset = CGSize(width: 0, height: screenHeight / 2 - 100)
+            case .landscapeLeft, .landscapeRight:
+                shutterButtonOffset = CGSize(width: -100, height: screenHeight / 2 - 100)
+            default:
+                break
+            }
+        }
+    }
+
+    private struct ShutterButton: View {
+        var body: some View {
+            ZStack {
+                Circle()
+                    .strokeBorder(.white, lineWidth: 3)
+                    .frame(width: 72, height: 72)
+                Circle()
+                    .fill(.white)
+                    .frame(width: 60, height: 60)
+            }
         }
     }
 
     // MARK: - Camera background
-
     @ViewBuilder
     private var cameraBackground: some View {
         #if targetEnvironment(simulator)
@@ -183,7 +323,9 @@ struct ContentView: View {
             }
             .clipped()
         #else
-        CameraPreviewView(session: cameraManager.session) { devicePoint, screenPoint in
+        CameraPreviewView(
+            session: cameraManager.session
+        ) { devicePoint, screenPoint in
             cameraManager.setFocusPoint(devicePoint)
             withAnimation(.easeInOut(duration: 0.2)) {
                 focusIndicatorPosition = screenPoint
@@ -193,7 +335,6 @@ struct ContentView: View {
     }
 
     // MARK: - Focus indicator
-
     private var focusIndicator: some View {
         GeometryReader { geometry in
             Image(systemName: "dot.crosshair")
@@ -216,41 +357,6 @@ struct ContentView: View {
             .background(.black)
             .ignoresSafeArea()
             .statusBarHidden(true)
-    }
-}
-
-// MARK: - Subviews
-
-struct ZoomSliderView: View {
-    @Binding var zoomFactor: CGFloat
-    let minZoom: CGFloat
-    let maxZoom: CGFloat
-    let onChanged: (CGFloat) -> Void
-
-    var body: some View {
-        VStack(spacing: 2) {
-            Text("zoom=\(String(format: "%.2f", zoomFactor))")
-                .foregroundStyle(.white)
-                .font(.caption)
-            Slider(value: $zoomFactor, in: minZoom...maxZoom)
-                .onChange(of: zoomFactor) { _, newValue in
-                    onChanged(newValue)
-                }
-                .frame(width: UIScreen.main.bounds.width * 0.8)
-        }
-    }
-}
-
-struct ShutterButton: View {
-    var body: some View {
-        ZStack {
-            Circle()
-                .strokeBorder(.white, lineWidth: 3)
-                .frame(width: 72, height: 72)
-            Circle()
-                .fill(.white)
-                .frame(width: 60, height: 60)
-        }
     }
 }
 
