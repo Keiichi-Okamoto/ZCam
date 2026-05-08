@@ -151,7 +151,7 @@
 
 ## Chapter 8
 
-- [ ] 801 FocusPoint の回転ずれを MetalView 化のタイミングで再実装する
+- [x] 801 FocusPoint の回転ずれを MetalView 化のタイミングで再実装する
     - 現状の `AVCaptureVideoPreviewLayer` + SwiftUI overlay 前提の補正は、Landscape で表示座標とタップ座標の整合が取りづらく、暫定修正を入れても再燃しやすい
     - `devicePoint` を正本にして、表示側は renderer で `devicePoint -> screenPoint` の変換を 1 箇所に集約する
     - `MTKView` 化後は、回転・crop・safe area・drawable size を含めた座標変換を renderer 側に閉じ込める
