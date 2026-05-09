@@ -15,13 +15,16 @@ final class OrientationObserver: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            let next = UIDevice.current.orientation
-            // Portrait / LandscapeLeft / LandscapeRight のみ採用
-            switch next {
-            case .portrait, .landscapeLeft, .landscapeRight:
-                self?.orientation = next
-            default:
-                break
+            // queue: .main で実行されるため MainActor コンテキストとして安全に扱える
+            MainActor.assumeIsolated {
+                let next = UIDevice.current.orientation
+                // Portrait / LandscapeLeft / LandscapeRight のみ採用
+                switch next {
+                case .portrait, .landscapeLeft, .landscapeRight:
+                    self?.orientation = next
+                default:
+                    break
+                }
             }
         }
         switch UIDevice.current.orientation {
@@ -33,7 +36,10 @@ final class OrientationObserver: ObservableObject {
     }
 
     deinit {
-        UIDevice.current.endGeneratingDeviceOrientationNotifications()
+        // @MainActor クラスの deinit はメインスレッドで呼ばれるため assumeIsolated で安全に扱える
+        MainActor.assumeIsolated {
+            UIDevice.current.endGeneratingDeviceOrientationNotifications()
+        }
         if let observer {
             NotificationCenter.default.removeObserver(observer)
         }

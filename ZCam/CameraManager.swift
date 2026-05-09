@@ -11,11 +11,14 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
-    @Published var zoomFactor: CGFloat = 1.0
+    @Published var sliderValue: CGFloat = 1.0
+    @Published var sliderMinZoom: CGFloat = 1.0
+    @Published var sliderMaxZoom: CGFloat = 3.0
 
     @Published var flashMode: AVCaptureDevice.FlashMode = .auto
 
     private var currentInput: AVCaptureDeviceInput?
+    private var hasUltraWide: Bool = false
 
     // AVCaptureSession の操作は Apple 推奨の専用シリアルキューで実行する
     private let sessionQueue = DispatchQueue(label: "com.example.ZCam.sessionQueue")
@@ -47,11 +50,11 @@ final class CameraManager: NSObject, ObservableObject {
     }
 
     private func configure() async {
-        let input: AVCaptureDeviceInput? = await withCheckedContinuation { continuation in
+        let result: (AVCaptureDeviceInput?, Bool) = await withCheckedContinuation { continuation in
             sessionQueue.async { [session] in
                 guard let device = Self.preferredBackCamera() else {
                     logger.error("背面カメラが見つかりません")
-                    continuation.resume(returning: nil)
+                    continuation.resume(returning: (nil, false))
                     return
                 }
 
@@ -61,29 +64,38 @@ final class CameraManager: NSObject, ObservableObject {
                 do {
                     let input = try AVCaptureDeviceInput(device: device)
                     guard session.canAddInput(input) else {
-                        continuation.resume(returning: nil)
+                        continuation.resume(returning: (nil, false))
                         return
                     }
                     session.addInput(input)
 
+                    let hasUltraWide = device.isVirtualDevice &&
+                        device.constituentDevices.contains { $0.deviceType == .builtInUltraWideCamera }
+
                     try device.lockForConfiguration()
-                    device.videoZoomFactor = 1.0
+                    // ultrawide搭載時: slider値の2倍をvideoZoomFactorに設定するため、初期値は2.0
+                    device.videoZoomFactor = hasUltraWide ? 2.0 : 1.0
                     Self.configureContinuousAuto(device: device)
                     device.unlockForConfiguration()
 
-                    continuation.resume(returning: input)
+                    continuation.resume(returning: (input, hasUltraWide))
                 } catch {
                     logger.error("カメラの設定に失敗しました: \(error.localizedDescription)")
-                    continuation.resume(returning: nil)
+                    continuation.resume(returning: (nil, false))
                 }
             }
         }
-        currentInput = input
+        currentInput = result.0
+        hasUltraWide = result.1
+        sliderMinZoom = result.1 ? 0.5 : 1.0
+        sliderMaxZoom = 3.0
+        sliderValue = 1.0
     }
 
     private nonisolated static func preferredBackCamera() -> AVCaptureDevice? {
         let types: [AVCaptureDevice.DeviceType] = [
             .builtInTripleCamera,
+            .builtInDualWideCamera,
             .builtInDualCamera,
             .builtInWideAngleCamera
         ]
@@ -120,19 +132,21 @@ final class CameraManager: NSObject, ObservableObject {
     }
 
     func setZoomFactor(_ factor: CGFloat) {
+        // デバイス有無に関わらずスライダー値を保持（シミュレータでの拡大縮小表示に使用）
+        sliderValue = factor
         guard let device = currentInput?.device else {
-            zoomFactor = factor
-            logger.debug("ズーム倍率: \(factor, privacy: .public)")
+            logger.debug("ズームスライダー値(デバイスなし): \(factor, privacy: .public)")
             return
         }
-        let clamped = min(max(factor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
-        zoomFactor = clamped
+        // ultrawide搭載時はslider値の2倍をvideoZoomFactorに設定
+        let rawFactor = hasUltraWide ? factor * 2.0 : factor
+        let clamped = min(max(rawFactor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
         sessionQueue.async {
             do {
                 try device.lockForConfiguration()
                 device.videoZoomFactor = clamped
                 device.unlockForConfiguration()
-                logger.debug("ズーム倍率: \(clamped, privacy: .public)")
+                logger.debug("ズーム倍率(slider=\(factor, privacy: .public), zoom=\(clamped, privacy: .public))")
             } catch {
                 logger.error("ズーム設定に失敗: \(error.localizedDescription)")
             }
