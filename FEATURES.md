@@ -104,13 +104,13 @@
         - Portrait: シャッターボタンの上部に表示。画面横幅の80% 
         - Landscape: Landscapeにした時の画面下部に表示。Landscapeにした時の画面幅の80%
 
-- [ ] 402-fix-zoom-functionality
-    - [ ] `isVirtualDevice == true`で`constituentDevices`の中に`AVCaptureDeviceTypeBuiltInUltraWideCamera`がある場合
+- [x] 402-fix-zoom-functionality
+    - [x] `isVirtualDevice == true`で`constituentDevices`の中に`AVCaptureDeviceTypeBuiltInUltraWideCamera`がある場合
         - Sliderの倍率を `0.5 - 3.0`とする
         - 初期値は`1.0`
         - `videoZoomFactor`はSliderの値の2倍。
         - 実際の設定前に`minAvailableVideoZoomFactor...maxAvailableVideoZoomFactor`にclamp
-    - [ ] それ以外の場合
+    - [x] それ以外の場合
         - Sliderの倍率を `1.0 - 3.0` とする
         - 初期値は`1.0`
         - `videoZoomFactor`はSliderの値そのまま
