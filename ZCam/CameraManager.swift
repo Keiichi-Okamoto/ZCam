@@ -11,7 +11,7 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) let session = AVCaptureSession()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
-    @Published var zoomFactor: CGFloat = 1.0
+    @Published var sliderValue: CGFloat = 1.0
     @Published var sliderMinZoom: CGFloat = 1.0
     @Published var sliderMaxZoom: CGFloat = 3.0
 
@@ -89,12 +89,13 @@ final class CameraManager: NSObject, ObservableObject {
         hasUltraWide = result.1
         sliderMinZoom = result.1 ? 0.5 : 1.0
         sliderMaxZoom = 3.0
-        zoomFactor = 1.0
+        sliderValue = 1.0
     }
 
     private nonisolated static func preferredBackCamera() -> AVCaptureDevice? {
         let types: [AVCaptureDevice.DeviceType] = [
             .builtInTripleCamera,
+            .builtInDualWideCamera,
             .builtInDualCamera,
             .builtInWideAngleCamera
         ]
@@ -131,7 +132,8 @@ final class CameraManager: NSObject, ObservableObject {
     }
 
     func setZoomFactor(_ factor: CGFloat) {
-        zoomFactor = factor
+        // デバイス有無に関わらずスライダー値を保持（シミュレータでの拡大縮小表示に使用）
+        sliderValue = factor
         guard let device = currentInput?.device else {
             logger.debug("ズームスライダー値(デバイスなし): \(factor, privacy: .public)")
             return

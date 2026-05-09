@@ -179,7 +179,7 @@ struct ContentView: View {
         var body: some View {
             HStack {
                 ZoomSliderView(
-                    zoomFactor: $cameraManager.zoomFactor,
+                    sliderValue: $cameraManager.sliderValue,
                     minZoom: cameraManager.sliderMinZoom,
                     maxZoom: cameraManager.sliderMaxZoom,
                     onChanged: { cameraManager.setZoomFactor($0) }
@@ -236,18 +236,18 @@ struct ContentView: View {
     }
 
     private struct ZoomSliderView: View {
-        @Binding var zoomFactor: CGFloat
+        @Binding var sliderValue: CGFloat
         let minZoom: CGFloat
         let maxZoom: CGFloat
         let onChanged: (CGFloat) -> Void
 
         var body: some View {
             VStack(spacing: 2) {
-                Text("zoom=\(String(format: "%.2f", zoomFactor))")
+                Text("zoom=\(String(format: "%.2f", sliderValue))")
                     .foregroundStyle(.white)
                     .font(.caption)
-                Slider(value: $zoomFactor, in: minZoom...maxZoom)
-                    .onChange(of: zoomFactor) { _, newValue in
+                Slider(value: $sliderValue, in: minZoom...maxZoom)
+                    .onChange(of: sliderValue) { _, newValue in
                         onChanged(newValue)
                     }
             }
@@ -317,7 +317,7 @@ struct ContentView: View {
                 Image("simulator_dummy")
                     .resizable()
                     .scaledToFill()
-                    .scaleEffect(cameraManager.zoomFactor)
+                    .scaleEffect(cameraManager.sliderValue)
             }
             .clipped()
         #else
