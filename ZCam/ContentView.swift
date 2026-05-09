@@ -173,8 +173,6 @@ struct ContentView: View {
         let viewSize: CGSize
         @ObservedObject var cameraManager: CameraManager
         @ObservedObject var orientationObserver: OrientationObserver
-        private let minZoomFactor: CGFloat = 0.5
-        private let maxZoomFactor: CGFloat = 3.0
         @State var sliderWidth: CGFloat = 0
         @State var sliderOffset = CGSize.zero
 
@@ -182,8 +180,8 @@ struct ContentView: View {
             HStack {
                 ZoomSliderView(
                     zoomFactor: $cameraManager.zoomFactor,
-                    minZoom: minZoomFactor,
-                    maxZoom: maxZoomFactor,
+                    minZoom: cameraManager.sliderMinZoom,
+                    maxZoom: cameraManager.sliderMaxZoom,
                     onChanged: { cameraManager.setZoomFactor($0) }
                 )
                 .frame(width: sliderWidth)
