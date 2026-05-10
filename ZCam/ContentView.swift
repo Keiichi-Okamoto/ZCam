@@ -322,7 +322,7 @@ struct ContentView: View {
             .clipped()
         #else
         CameraPreviewView(
-            session: cameraManager.session
+            frameStore: cameraManager.frameStore
         ) { devicePoint, screenPoint in
             cameraManager.setFocusPoint(devicePoint)
             withAnimation(.easeInOut(duration: 0.2)) {

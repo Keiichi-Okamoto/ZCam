@@ -1,15 +1,25 @@
-import AVFoundation
+import MetalKit
 import SwiftUI
 
 struct CameraPreviewView: UIViewRepresentable {
-    let session: AVCaptureSession
+    let frameStore: CameraFrameStore
     /// devicePoint: AVFoundation座標（フォーカス設定用）、screenPoint: 正規化スクリーン座標（インジケーター表示用）
     var onTap: ((_ devicePoint: CGPoint, _ screenPoint: CGPoint) -> Void)?
 
-    func makeUIView(context: Context) -> PreviewView {
-        let view = PreviewView()
-        view.previewLayer.session = session
-        view.previewLayer.videoGravity = .resizeAspectFill
+    func makeUIView(context: Context) -> MTKView {
+        let view = MTKView()
+        view.backgroundColor = .black
+        view.framebufferOnly = false
+        view.enableSetNeedsDisplay = false
+        view.isPaused = false
+        view.colorPixelFormat = .bgra8Unorm
+
+        if let device = MTLCreateSystemDefaultDevice(),
+           let renderer = MetalRenderer(device: device, frameStore: frameStore) {
+            view.device = device
+            view.delegate = renderer
+            context.coordinator.retainedRenderer = renderer
+        }
 
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         tap.numberOfTapsRequired = 1
@@ -24,7 +34,7 @@ struct CameraPreviewView: UIViewRepresentable {
         return view
     }
 
-    func updateUIView(_ uiView: PreviewView, context: Context) {
+    func updateUIView(_ uiView: MTKView, context: Context) {
         context.coordinator.onTap = onTap
     }
 
@@ -34,78 +44,34 @@ struct CameraPreviewView: UIViewRepresentable {
 
     final class Coordinator: NSObject {
         var onTap: ((_ devicePoint: CGPoint, _ screenPoint: CGPoint) -> Void)?
+        var retainedRenderer: MetalRenderer?
 
         init(onTap: ((_ devicePoint: CGPoint, _ screenPoint: CGPoint) -> Void)?) {
             self.onTap = onTap
         }
 
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
-            guard let previewView = gesture.view as? PreviewView else { return }
-            let layerPoint = gesture.location(in: previewView)
-            let interfaceOrientation = previewView.window?.windowScene?.interfaceOrientation ?? .portrait
-            let convertedPoint = convertedLayerPoint(
-                from: layerPoint,
-                in: previewView.bounds,
-                interfaceOrientation: interfaceOrientation
-            )
-            let devicePoint = previewView.previewLayer.captureDevicePointConverted(fromLayerPoint: convertedPoint)
-            let screenPoint = CGPoint(
-                x: layerPoint.x / previewView.bounds.width,
-                y: layerPoint.y / previewView.bounds.height
-            )
-            onTap?(devicePoint, screenPoint)
+            guard let previewView = gesture.view else { return }
+            let point = gesture.location(in: previewView)
+            let screenPoint = normalizedPoint(from: point, in: previewView.bounds)
+            // TODO: 700 で MTKView の crop / rotation を含めた screenPoint -> devicePoint 変換を実装する。
+            let provisionalDevicePoint = screenPoint
+            onTap?(provisionalDevicePoint, screenPoint)
         }
 
         @objc func handleDoubleTap() {
             onTap?(CGPoint(x: 0.5, y: 0.5), CGPoint(x: 0.5, y: 0.5))
         }
 
-        private func convertedLayerPoint(from point: CGPoint,
-                                         in bounds: CGRect,
-                                         interfaceOrientation: UIInterfaceOrientation) -> CGPoint {
-            guard bounds.width > 0, bounds.height > 0 else { return point }
-
-            let normalizedX = point.x / bounds.width
-            let normalizedY = point.y / bounds.height
-
-            switch interfaceOrientation {
-            case .landscapeLeft:
-                return CGPoint(
-                    x: normalizedY * bounds.width,
-                    y: (1 - normalizedX) * bounds.height
-                )
-            case .landscapeRight:
-                return CGPoint(
-                    x: (1 - normalizedY) * bounds.width,
-                    y: normalizedX * bounds.height
-                )
-            default:
-                return point
+        private func normalizedPoint(from point: CGPoint, in bounds: CGRect) -> CGPoint {
+            guard bounds.width > 0, bounds.height > 0 else {
+                return CGPoint(x: 0.5, y: 0.5)
             }
+
+            return CGPoint(
+                x: min(max(point.x / bounds.width, 0), 1),
+                y: min(max(point.y / bounds.height, 0), 1)
+            )
         }
-    }
-}
-
-final class PreviewView: UIView {
-    override static var layerClass: AnyClass {
-        AVCaptureVideoPreviewLayer.self
-    }
-
-    var previewLayer: AVCaptureVideoPreviewLayer {
-        // layerClassをAVCaptureVideoPreviewLayerに固定しているため常に成功する
-        layer as! AVCaptureVideoPreviewLayer // swiftlint:disable:this force_cast
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        // CALayerのアニメーションを無効化してフレーム更新をアニメーションなしで反映する
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        previewLayer.frame = bounds
-        // プレビュー表示は portrait 基準で固定する
-        if let connection = previewLayer.connection, connection.isVideoRotationAngleSupported(90) {
-            connection.videoRotationAngle = 90
-        }
-        CATransaction.commit()
     }
 }

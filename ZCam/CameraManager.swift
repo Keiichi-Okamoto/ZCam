@@ -1,5 +1,6 @@
 @preconcurrency import AVFoundation
 import Combine
+import CoreImage
 import OSLog
 
 nonisolated private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", category: "CameraManager")
@@ -9,6 +10,7 @@ final class CameraManager: NSObject, ObservableObject {
     // Swift 6 では non-Sendable 型に nonisolated を付けられないため nonisolated(unsafe) を使用。
     // session は sessionQueue 上でのみ操作するため、スレッド安全性は呼び出し側で保証する。
     nonisolated(unsafe) let session = AVCaptureSession()
+    let frameStore = CameraFrameStore()
 
     @Published var authorizationStatus: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @Published var sliderValue: CGFloat = 1.0
@@ -22,6 +24,8 @@ final class CameraManager: NSObject, ObservableObject {
 
     // AVCaptureSession の操作は Apple 推奨の専用シリアルキューで実行する
     private let sessionQueue = DispatchQueue(label: "com.example.ZCam.sessionQueue")
+    private let videoOutputQueue = DispatchQueue(label: "com.example.ZCam.videoOutputQueue")
+    private let videoOutput = AVCaptureVideoDataOutput()
 
     override init() {
         super.init()
@@ -51,7 +55,7 @@ final class CameraManager: NSObject, ObservableObject {
 
     private func configure() async {
         let result: (AVCaptureDeviceInput?, Bool) = await withCheckedContinuation { continuation in
-            sessionQueue.async { [session] in
+            sessionQueue.async { [session, videoOutput, videoOutputQueue] in
                 guard let device = Self.preferredBackCamera() else {
                     logger.error("背面カメラが見つかりません")
                     continuation.resume(returning: (nil, false))
@@ -68,6 +72,27 @@ final class CameraManager: NSObject, ObservableObject {
                         return
                     }
                     session.addInput(input)
+
+                    videoOutput.alwaysDiscardsLateVideoFrames = true
+                    videoOutput.videoSettings = [
+                        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+                    ]
+                    videoOutput.setSampleBufferDelegate(self, queue: videoOutputQueue)
+
+                    guard session.canAddOutput(videoOutput) else {
+                        continuation.resume(returning: (nil, false))
+                        return
+                    }
+                    session.addOutput(videoOutput)
+
+                    if let connection = videoOutput.connection(with: .video) {
+                        if connection.isVideoRotationAngleSupported(90) {
+                            connection.videoRotationAngle = 90
+                        }
+                        if connection.isVideoMirroringSupported {
+                            connection.isVideoMirrored = false
+                        }
+                    }
 
                     let hasUltraWide = device.isVirtualDevice &&
                         device.constituentDevices.contains { $0.deviceType == .builtInUltraWideCamera }
@@ -191,5 +216,14 @@ final class CameraManager: NSObject, ObservableObject {
         sessionQueue.async { [session] in
             session.stopRunning()
         }
+    }
+}
+
+extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
+    nonisolated func captureOutput(_ output: AVCaptureOutput,
+                                   didOutput sampleBuffer: CMSampleBuffer,
+                                   from connection: AVCaptureConnection) {
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        frameStore.update(CIImage(cvPixelBuffer: pixelBuffer))
     }
 }

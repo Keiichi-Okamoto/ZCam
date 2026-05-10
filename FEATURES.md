@@ -38,7 +38,7 @@
     - [x] 303-6 シミュレータで実行する場合には`#if targetEnvironment(simulator) `で判別し、`Resource/image/simulator_dummy.jpg`を使用する。
     - [x] 303-7 302のダイアログで拒否された場合には「カメラへのアクセスが許可されていません」とテキスト表示。
 
-## Chapter 4（変更の可能性あり）
+## Chapter 4
 - [x] 401 Auto Focus機能の追加
     - [x] 401-1 `UIRequiredDeviceCapabilities`への追加
         - `auto-focus-camera`, `camera-flash`
@@ -117,49 +117,82 @@
         - 実際の設定前に`minAvailableVideoZoomFactor...maxAvailableVideoZoomFactor`にclamp
 
 ## Chapter 5
-    - [ ] 501 CIFIlterの実装
-        - CIColorPosterize
-            - 画像の抽象化
-        - CILineOverlay
-            - 画像の中の輪郭を抽出
-        - CIMultiplyBlendMode
-            - 上記2つのフィルタの出力を合成
-    - [ ] 502 パラメータ調整用パネルの表示
-        - [ ] 502-1 画面右上に`slider.horizontal.3`を表示（ローテート対象）
-        - [ ] 502-2 `slider.horizontal.3`でパラメータ表示のためのViewの表示
-        - [ ] 502-3 Viewは指でドラック可能
-        - [ ] 502-4 端末をローテートする事でViewもローテート
-        - [ ] 502-5 Viewには以下の3つを操作するSliderを表示 (タイトルをスライダの上部に)
-            - inputLevels（CIColorPosterize）
-            - inputEdgeIntensity（CILineOverlay）
-            - inputThreshold（CILineOverlay）
-        - [ ] 502-6 各Sliderの移動で即時に画面に反映
-            - UserDefaultsに保存し、次回起動時にはそれを参照する
-        
+    - AVCaptureVideoPreviewLayer -> MTKView
+   - [x] 501 `AVCaptureVideoPreviewLayer` を `MTKView` に置き換える
+        - `UIRequiredDeviceCapabilities`に`metal`を追加
+        - `AVCaptureVideoDataOutput`で映像フレームを取得する
+            - [x] 501-1 `AVCaptureVideoDataOutput`の実装
+            - [x] 501-2 `CMSampleBuffer`から`CIImage`を生成
+        - `MTKView` / `MTKViewDelegate`を実装する
+        - `MetalRenderer`を実装する
+            - `CIImage`を`MTKView`に描画する
+            - この時点ではフィルター処理は行わない
+            - Chapter 6でCoreImageフィルターを差し込める構造にする
+        - 既存機能を維持する
+            - Zoomスライダーの操作で実機映像の拡大縮小が反映される
+            - FlashModeのUIと保存処理は維持する
+            - ShutterButton / FocusPoint / 各種UIの表示位置は維持する
+            - シミュレータでは従来通りダミー画像を表示する
+        - 受け入れ条件:
+            - 実機でカメラ映像が`MTKView`経由で全画面表示される
+            - `AVCaptureVideoPreviewLayer`への依存を表示処理から取り除く
+            - Chapter 6のFilter PipelineはこのPRでは実装しない
+            - `xcodebuild`でビルドが成功する
+            - 実機確認が必要な項目はPR本文に明記する
+
 ## Chapter 6
-    - [ ] `UIRequiredDeviceCapabilities`に`metal`を追加
-    - [ ] `CALayer`を`MTKView`に置き換える
-    - [ ] 'MTKViewDelegate'の実装
+    - [ ] 601 Filter Pipelineの実装
+        - [ ] 601-1 CIFilter
+            - CIColorPosterize
+                - 画像の抽象化
+            - CILineOverlay
+                - 画像の中の輪郭を抽出
+            - CIMultiplyBlendMode
+                - `inputImage`に`CIColorPosterize`の出力、`inputBackgroundImage`に`CILineOverlay`の出力
+        - [ ] 601-2 シミュレータ画像にも同じフィルターを適用
+    - [ ] 602 パラメータ調整用パネルの表示とUserDefaults
+        - [ ] 602-1 画面右上に`slider.horizontal.3`を表示
+        - [ ] 602-2 `slider.horizontal.3`のタップでパラメータ表示のためのViewの表示
+        - [ ] 602-3 Viewには以下の3つを操作するSliderを表示 (タイトルと現在の値をスライダの上部に)
+            - 各フィルタの初期値は`setDefaults()`の値
+            - inputLevels (CIColorPosterize) : 2...20, Step = 0.01
+            - inputEdgeIntensity (CILineOverlay) : 0...5, Step = 0.01
+            - inputThreshold (CILineOverlay) : 0...1, Step = 0.01
+        - [ ] 602-4 各Sliderの移動で即時に画面に反映
+            - UserDefaultsに保存し、次回起動時にはそれを参照する
+            | Parameter | UserDefaults key |
+            | --- | --- |
+            | `inputLevels` | `"inputLevels"` |
+            | `inputEdgeIntensity` | `"inputEdgeIntensity"` |
+            | `inputThreshold` | `"inputThreshold"` |
+        - [ ] 602-5 Viewは指のドラッグで移動可能
+        - [ ] 602-6 端末をローテートする事でViewもローテート（Viewの中心を支点とする）
 
 ## Chapter 7
+    - 座標の整合性の修正
+    - [ ] 700 FocusPoint の回転ずれに対応する
+        - `AVCaptureVideoPreviewLayer` での実装時には端末をローテーションした際に`FocusPoint`が想定した位置に移動しなかった。
+        - `MTKView`へ移行した事により表示部の実装が大きく変わった。
+        - 現状の `AVCaptureVideoPreviewLayer` + SwiftUI overlay 前提の補正は、Landscape で表示座標とタップ座標の整合が取りづらく、暫定修正を入れても再燃しやすい
+        - `devicePoint` を正本にして、表示側は renderer で `devicePoint -> screenPoint` の変換を 1 箇所に集約する
+        - `MTKView` 化後は、回転・crop・safe area・drawable size を含めた座標変換を renderer 側に閉じ込める
+        - 実装案:
+            - `FocusPointModel` を `devicePoint` 中心に持たせる
+            - `Renderer` に `devicePoint -> layerPoint` の変換関数を持たせる
+            - タップは `screenPoint` から `devicePoint` に戻すのではなく、プレビューの実表示領域を基準に一度正規化してから変換する
+        - 受け入れ条件:
+            - Portrait / Landscape Left / Landscape Right で FocusPoint が表示中心と一致する
+            - Double Tap で中心復帰が安定する
+            - 既存 UI レイアウトに副作用を出さない
+    - [ ] `Chapter 5`で表示を`MTKView`に変更した事によりFocusPoint 表示位置と focusPointOfInterest /
+    exposurePointOfInterest の不一致が発生した。その修正
+
+## Chapter 8
     - [ ] `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加
         - 「撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。」
-    - [ ] デバイスの向きに合わせて画像を回転させて保存
+    - [ ] デバイスの向きに合わせてフィルタされた画像を回転させて保存
     - 最後に...
         - [ ] PrivacyInfoの追加
             - 全ソースをチェックし必要な項目を記述する
 
-## Chapter 8
-
-- [ ] 801 FocusPoint の回転ずれを MetalView 化のタイミングで再実装する
-    - 現状の `AVCaptureVideoPreviewLayer` + SwiftUI overlay 前提の補正は、Landscape で表示座標とタップ座標の整合が取りづらく、暫定修正を入れても再燃しやすい
-    - `devicePoint` を正本にして、表示側は renderer で `devicePoint -> screenPoint` の変換を 1 箇所に集約する
-    - `MTKView` 化後は、回転・crop・safe area・drawable size を含めた座標変換を renderer 側に閉じ込める
-    - 実装案:
-        - `FocusPointModel` を `devicePoint` 中心に持たせる
-        - `Renderer` に `devicePoint -> layerPoint` の変換関数を持たせる
-        - タップは `screenPoint` から `devicePoint` に戻すのではなく、プレビューの実表示領域を基準に一度正規化してから変換する
-    - 受け入れ条件:
-        - Portrait / Landscape Left / Landscape Right で FocusPoint が表示中心と一致する
-        - Double Tap で中心復帰が安定する
-        - 既存 UI レイアウトに副作用を出さない
+## Chapter 9
