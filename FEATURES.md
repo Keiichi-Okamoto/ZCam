@@ -169,7 +169,7 @@
         - [ ] 602-6 端末をローテートする事でViewもローテート（Viewの中心を支点とする）
 
 ## Chapter 7
-    - 座標の生合成の修正
+    - 座標の整合性の修正
     - [ ] 700 FocusPoint の回転ずれに対応する
         - `AVCaptureVideoPreviewLayer` での実装時には端末をローテーションした際に`FocusPoint`が想定した位置に移動しなかった。
         - `MTKView`へ移行した事により表示部の実装が大きく変わった。
@@ -184,7 +184,8 @@
             - Portrait / Landscape Left / Landscape Right で FocusPoint が表示中心と一致する
             - Double Tap で中心復帰が安定する
             - 既存 UI レイアウトに副作用を出さない
-    - [ ] `Chapter 6`で表示を`MTKView`に変更した事によりTapで移動した先が`exposurePointOfInterest`に一致しない問題の解消。
+    - [ ] `Chapter 5`で表示を`MTKView`に変更した事によりFocusPoint 表示位置と focusPointOfInterest /
+    exposurePointOfInterest の不一致が発生した。その修正
 
 ## Chapter 8
     - [ ] `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加
