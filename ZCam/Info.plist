@@ -46,6 +46,7 @@
 	<array>
 		<string>auto-focus-camera</string>
 		<string>camera-flash</string>
+		<string>metal</string>
 	</array>
 </dict>
 </plist>
