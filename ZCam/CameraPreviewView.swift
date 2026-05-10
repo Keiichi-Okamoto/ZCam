@@ -54,7 +54,9 @@ struct CameraPreviewView: UIViewRepresentable {
             guard let previewView = gesture.view else { return }
             let point = gesture.location(in: previewView)
             let screenPoint = normalizedPoint(from: point, in: previewView.bounds)
-            onTap?(screenPoint, screenPoint)
+            // TODO: 700 で MTKView の crop / rotation を含めた screenPoint -> devicePoint 変換を実装する。
+            let provisionalDevicePoint = screenPoint
+            onTap?(provisionalDevicePoint, screenPoint)
         }
 
         @objc func handleDoubleTap() {
