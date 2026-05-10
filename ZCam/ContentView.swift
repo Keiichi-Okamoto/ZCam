@@ -308,19 +308,6 @@ struct ContentView: View {
     // MARK: - Camera background
     @ViewBuilder
     private var cameraBackground: some View {
-        #if targetEnvironment(simulator)
-        // Color.black を土台にして Image を overlay することで、
-        // Image の固有サイズが ZStack 全体の幅提案に伝播するのを防ぐ。
-        // これがないと、同じ ZStack 内の Slider に「無限大の幅」が提案され描画が破綻する。
-        Color.black
-            .overlay {
-                Image("simulator_dummy")
-                    .resizable()
-                    .scaledToFill()
-                    .scaleEffect(cameraManager.sliderValue)
-            }
-            .clipped()
-        #else
         CameraPreviewView(
             frameStore: cameraManager.frameStore
         ) { devicePoint, screenPoint in
@@ -329,7 +316,6 @@ struct ContentView: View {
                 focusIndicatorPosition = screenPoint
             }
         }
-        #endif
     }
 
     // MARK: - Focus indicator

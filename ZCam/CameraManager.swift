@@ -2,6 +2,7 @@
 import Combine
 import CoreImage
 import OSLog
+import UIKit
 
 nonisolated private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", category: "CameraManager")
 
@@ -151,10 +152,22 @@ final class CameraManager: NSObject, ObservableObject {
 
     func start() {
         guard !session.isRunning else { return }
+        #if targetEnvironment(simulator)
+        loadSimulatorDummyFrame()
+        #else
         sessionQueue.async { [session] in
             session.startRunning()
         }
+        #endif
     }
+
+    #if targetEnvironment(simulator)
+    private func loadSimulatorDummyFrame() {
+        guard let uiImage = UIImage(named: "simulator_dummy"),
+              let cgImage = uiImage.cgImage else { return }
+        frameStore.update(CIImage(cgImage: cgImage))
+    }
+    #endif
 
     func setZoomFactor(_ factor: CGFloat) {
         // デバイス有無に関わらずスライダー値を保持（シミュレータでの拡大縮小表示に使用）

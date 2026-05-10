@@ -141,15 +141,18 @@
             - 実機確認が必要な項目はPR本文に明記する
 
 ## Chapter 6
-    - [ ] 601 Filter Pipelineの実装
-        - [ ] 601-1 CIFilter
+    - CoreImageフィルターの実装と、Portraitでのパラメータ調整をゴールとする
+    - 端末ローテーション時のUI回転・位置調整・ドラッグ操作はChapter 7で扱う
+    - Chapter 6の動作確認はPortraitを前提とする
+    - [x] 601 Filter Pipelineの実装
+        - [x] 601-1 CIFilter
             - CIColorPosterize
                 - 画像の抽象化
             - CILineOverlay
                 - 画像の中の輪郭を抽出
             - CIMultiplyBlendMode
                 - `inputImage`に`CIColorPosterize`の出力、`inputBackgroundImage`に`CILineOverlay`の出力
-        - [ ] 601-2 シミュレータ画像にも同じフィルターを適用
+        - [x] 601-2 シミュレータ画像にも同じフィルターを適用
     - [ ] 602 パラメータ調整用パネルの表示とUserDefaults
         - [ ] 602-1 画面右上に`slider.horizontal.3`を表示
         - [ ] 602-2 `slider.horizontal.3`のタップでパラメータ表示のためのViewの表示
@@ -165,27 +168,23 @@
             | `inputLevels` | `"inputLevels"` |
             | `inputEdgeIntensity` | `"inputEdgeIntensity"` |
             | `inputThreshold` | `"inputThreshold"` |
-        - [ ] 602-5 Viewは指のドラッグで移動可能
-        - [ ] 602-6 端末をローテートする事でViewもローテート（Viewの中心を支点とする）
+    - 受け入れ条件:
+        - Portraitでフィルター効果が確認できる
+        - Portraitでパラメータ調整パネルを表示し、Sliderで即時反映できる
+        - パラメータはUserDefaultsに保存される
+        - LandscapeでのUI回転・位置調整はこの章では対象外
+        - `slider.horizontal.3`とパラメータViewのローテーション、ドラッグ移動はこの章では実装しない
 
 ## Chapter 7
     - 座標の整合性の修正
-    - [ ] 700 FocusPoint の回転ずれに対応する
-        - `AVCaptureVideoPreviewLayer` での実装時には端末をローテーションした際に`FocusPoint`が想定した位置に移動しなかった。
-        - `MTKView`へ移行した事により表示部の実装が大きく変わった。
-        - 現状の `AVCaptureVideoPreviewLayer` + SwiftUI overlay 前提の補正は、Landscape で表示座標とタップ座標の整合が取りづらく、暫定修正を入れても再燃しやすい
-        - `devicePoint` を正本にして、表示側は renderer で `devicePoint -> screenPoint` の変換を 1 箇所に集約する
-        - `MTKView` 化後は、回転・crop・safe area・drawable size を含めた座標変換を renderer 側に閉じ込める
-        - 実装案:
-            - `FocusPointModel` を `devicePoint` 中心に持たせる
-            - `Renderer` に `devicePoint -> layerPoint` の変換関数を持たせる
-            - タップは `screenPoint` から `devicePoint` に戻すのではなく、プレビューの実表示領域を基準に一度正規化してから変換する
-        - 受け入れ条件:
-            - Portrait / Landscape Left / Landscape Right で FocusPoint が表示中心と一致する
-            - Double Tap で中心復帰が安定する
-            - 既存 UI レイアウトに副作用を出さない
-    - [ ] `Chapter 5`で表示を`MTKView`に変更した事によりFocusPoint 表示位置と focusPointOfInterest /
+    - [ ] 700 FocusPoint の座標整合性を修正する
+        - `Chapter 5`で表示を`MTKView`に変更した事によりFocusPoint 表示位置と focusPointOfInterest /
     exposurePointOfInterest の不一致が発生した。その修正
+    - [ ] 701 パラメータ調整UIの座標・回転対応
+        - [ ] 701-1 `slider.horizontal.3`を端末ローテーションに追従して回転
+        - [ ] 701-2 パラメータViewを端末ローテーションに追従して回転
+        - [ ] 701-3 パラメータViewを指のドラッグで移動可能にする
+        - [ ] 701-4 Portrait / Landscape Left / Landscape Right で既存UIと重ならない
 
 ## Chapter 8
     - [ ] `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加

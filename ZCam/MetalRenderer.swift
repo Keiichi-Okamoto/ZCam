@@ -7,6 +7,7 @@ final class MetalRenderer: NSObject, MTKViewDelegate {
     private let commandQueue: MTLCommandQueue
     private let ciContext: CIContext
     private let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let filterPipeline = FilterPipeline()
 
     init?(device: MTLDevice, frameStore: CameraFrameStore) {
         guard let commandQueue = device.makeCommandQueue() else { return nil }
@@ -27,7 +28,8 @@ final class MetalRenderer: NSObject, MTKViewDelegate {
 
         let drawableSize = view.drawableSize
         let bounds = CGRect(origin: .zero, size: drawableSize)
-        let renderImage = aspectFill(image: image, in: bounds)
+        let filled = aspectFill(image: image, in: bounds)
+        let renderImage = filterPipeline.apply(to: filled)
 
         ciContext.render(
             renderImage,
