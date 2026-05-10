@@ -164,7 +164,10 @@ final class CameraManager: NSObject, ObservableObject {
     #if targetEnvironment(simulator)
     private func loadSimulatorDummyFrame() {
         guard let uiImage = UIImage(named: "simulator_dummy"),
-              let cgImage = uiImage.cgImage else { return }
+              let cgImage = uiImage.cgImage else {
+            logger.error("simulator_dummy 画像が見つかりません")
+            return
+        }
         frameStore.update(CIImage(cgImage: cgImage))
     }
     #endif

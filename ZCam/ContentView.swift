@@ -309,13 +309,15 @@ struct ContentView: View {
     @ViewBuilder
     private var cameraBackground: some View {
         CameraPreviewView(
-            frameStore: cameraManager.frameStore
-        ) { devicePoint, screenPoint in
-            cameraManager.setFocusPoint(devicePoint)
-            withAnimation(.easeInOut(duration: 0.2)) {
-                focusIndicatorPosition = screenPoint
-            }
-        }
+            frameStore: cameraManager.frameStore,
+            onTap: { devicePoint, screenPoint in
+                cameraManager.setFocusPoint(devicePoint)
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    focusIndicatorPosition = screenPoint
+                }
+            },
+            zoomFactor: cameraManager.sliderValue
+        )
     }
 
     // MARK: - Focus indicator

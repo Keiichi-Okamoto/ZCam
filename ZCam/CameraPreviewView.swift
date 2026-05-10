@@ -5,6 +5,9 @@ struct CameraPreviewView: UIViewRepresentable {
     let frameStore: CameraFrameStore
     /// devicePoint: AVFoundation座標（フォーカス設定用）、screenPoint: 正規化スクリーン座標（インジケーター表示用）
     var onTap: ((_ devicePoint: CGPoint, _ screenPoint: CGPoint) -> Void)?
+    #if targetEnvironment(simulator)
+    var zoomFactor: CGFloat = 1.0
+    #endif
 
     func makeUIView(context: Context) -> MTKView {
         let view = MTKView()
@@ -36,6 +39,9 @@ struct CameraPreviewView: UIViewRepresentable {
 
     func updateUIView(_ uiView: MTKView, context: Context) {
         context.coordinator.onTap = onTap
+        #if targetEnvironment(simulator)
+        context.coordinator.retainedRenderer?.zoomFactor = zoomFactor
+        #endif
     }
 
     func makeCoordinator() -> Coordinator {

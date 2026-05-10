@@ -19,13 +19,18 @@ final class FilterPipeline {
     }
 
     func apply(to image: CIImage) -> CIImage {
+        // CIFilter はスレッドセーフでないため、パラメータをローカルコピーして使用する
+        let levels = inputLevels
+        let edgeIntensity = inputEdgeIntensity
+        let threshold = inputThreshold
+
         posterize.setValue(image, forKey: kCIInputImageKey)
-        posterize.setValue(inputLevels, forKey: "inputLevels")
+        posterize.setValue(levels, forKey: "inputLevels")
         guard let posterized = posterize.outputImage else { return image }
 
         lineOverlay.setValue(image, forKey: kCIInputImageKey)
-        lineOverlay.setValue(inputEdgeIntensity, forKey: "inputEdgeIntensity")
-        lineOverlay.setValue(inputThreshold, forKey: "inputThreshold")
+        lineOverlay.setValue(edgeIntensity, forKey: "inputEdgeIntensity")
+        lineOverlay.setValue(threshold, forKey: "inputThreshold")
         guard let lines = lineOverlay.outputImage else { return posterized }
 
         multiply.setValue(posterized, forKey: kCIInputImageKey)
