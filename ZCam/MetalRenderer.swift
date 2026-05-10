@@ -7,6 +7,10 @@ final class MetalRenderer: NSObject, MTKViewDelegate {
     private let commandQueue: MTLCommandQueue
     private let ciContext: CIContext
     private let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let filterPipeline = FilterPipeline()
+    #if targetEnvironment(simulator)
+    var zoomFactor: CGFloat = 1.0
+    #endif
 
     init?(device: MTLDevice, frameStore: CameraFrameStore) {
         guard let commandQueue = device.makeCommandQueue() else { return nil }
@@ -27,7 +31,13 @@ final class MetalRenderer: NSObject, MTKViewDelegate {
 
         let drawableSize = view.drawableSize
         let bounds = CGRect(origin: .zero, size: drawableSize)
-        let renderImage = aspectFill(image: image, in: bounds)
+        let filled = aspectFill(image: image, in: bounds)
+        #if targetEnvironment(simulator)
+        let zoomed = applyZoom(image: filled, in: bounds)
+        let renderImage = filterPipeline.apply(to: zoomed)
+        #else
+        let renderImage = filterPipeline.apply(to: filled)
+        #endif
 
         ciContext.render(
             renderImage,
@@ -39,6 +49,18 @@ final class MetalRenderer: NSObject, MTKViewDelegate {
         commandBuffer.present(drawable)
         commandBuffer.commit()
     }
+
+    #if targetEnvironment(simulator)
+    private func applyZoom(image: CIImage, in bounds: CGRect) -> CIImage {
+        guard zoomFactor != 1.0 else { return image }
+        let tx = bounds.midX * (1 - zoomFactor)
+        let ty = bounds.midY * (1 - zoomFactor)
+        return image
+            .transformed(by: CGAffineTransform(scaleX: zoomFactor, y: zoomFactor)
+                .translatedBy(x: tx / zoomFactor, y: ty / zoomFactor))
+            .cropped(to: bounds)
+    }
+    #endif
 
     private func aspectFill(image: CIImage, in bounds: CGRect) -> CIImage {
         let extent = image.extent
