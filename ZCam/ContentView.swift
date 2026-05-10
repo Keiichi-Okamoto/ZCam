@@ -308,6 +308,7 @@ struct ContentView: View {
     // MARK: - Camera background
     @ViewBuilder
     private var cameraBackground: some View {
+        #if targetEnvironment(simulator)
         CameraPreviewView(
             frameStore: cameraManager.frameStore,
             onTap: { devicePoint, screenPoint in
@@ -318,6 +319,17 @@ struct ContentView: View {
             },
             zoomFactor: cameraManager.sliderValue
         )
+        #else
+        CameraPreviewView(
+            frameStore: cameraManager.frameStore,
+            onTap: { devicePoint, screenPoint in
+                cameraManager.setFocusPoint(devicePoint)
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    focusIndicatorPosition = screenPoint
+                }
+            }
+        )
+        #endif
     }
 
     // MARK: - Focus indicator
