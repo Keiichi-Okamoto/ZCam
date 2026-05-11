@@ -3,6 +3,7 @@ import SwiftUI
 
 struct CameraPreviewView: UIViewRepresentable {
     let frameStore: CameraFrameStore
+    let filterPipeline: FilterPipeline
     /// devicePoint: AVFoundation座標（フォーカス設定用）、screenPoint: 正規化スクリーン座標（インジケーター表示用）
     var onTap: ((_ devicePoint: CGPoint, _ screenPoint: CGPoint) -> Void)?
     #if targetEnvironment(simulator)
@@ -18,7 +19,7 @@ struct CameraPreviewView: UIViewRepresentable {
         view.colorPixelFormat = .bgra8Unorm
 
         if let device = MTLCreateSystemDefaultDevice(),
-           let renderer = MetalRenderer(device: device, frameStore: frameStore) {
+           let renderer = MetalRenderer(device: device, frameStore: frameStore, filterPipeline: filterPipeline) {
             view.device = device
             view.delegate = renderer
             context.coordinator.retainedRenderer = renderer

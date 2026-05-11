@@ -156,6 +156,7 @@
     - [ ] 602 パラメータ調整用パネルの表示とUserDefaults
         - [ ] 602-1 画面右上に`slider.horizontal.3`を表示
         - [ ] 602-2 `slider.horizontal.3`のタップでパラメータ表示のためのViewの表示
+            - Viewはブラーを掛けた半透明で形状はRoundRect。
         - [ ] 602-3 Viewには以下の3つを操作するSliderを表示 (タイトルと現在の値をスライダの上部に)
             - 各フィルタの初期値は`setDefaults()`の値
             - inputLevels (CIColorPosterize) : 2...20, Step = 0.01
