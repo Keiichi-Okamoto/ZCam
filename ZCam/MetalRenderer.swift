@@ -7,16 +7,17 @@ final class MetalRenderer: NSObject, MTKViewDelegate {
     private let commandQueue: MTLCommandQueue
     private let ciContext: CIContext
     private let colorSpace = CGColorSpaceCreateDeviceRGB()
-    let filterPipeline = FilterPipeline()
+    private let filterPipeline: FilterPipeline
     #if targetEnvironment(simulator)
     var zoomFactor: CGFloat = 1.0
     #endif
 
-    init?(device: MTLDevice, frameStore: CameraFrameStore) {
+    init?(device: MTLDevice, frameStore: CameraFrameStore, filterPipeline: FilterPipeline) {
         guard let commandQueue = device.makeCommandQueue() else { return nil }
         self.frameStore = frameStore
         self.commandQueue = commandQueue
         self.ciContext = CIContext(mtlDevice: device)
+        self.filterPipeline = filterPipeline
         super.init()
     }
 

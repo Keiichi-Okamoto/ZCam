@@ -11,8 +11,10 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
     @StateObject private var orientationObserver = OrientationObserver()
+    @StateObject private var filterPipeline = FilterPipeline()
     @State private var focusIndicatorPosition: CGPoint = CGPoint(x: 0.5, y: 0.5)
     @State private var isFlashMenuOpen = false
+    @State private var isParameterPanelOpen = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -24,12 +26,14 @@ struct ContentView: View {
                         .ignoresSafeArea()
                     focusIndicator
 
-                    // メニューが開いている時は背景タップで閉じる
-                    if isFlashMenuOpen {
+                    if isFlashMenuOpen || isParameterPanelOpen {
                         Color.clear
                             .contentShape(Rectangle())
                             .ignoresSafeArea()
-                            .onTapGesture { isFlashMenuOpen = false }
+                            .onTapGesture {
+                                isFlashMenuOpen = false
+                                isParameterPanelOpen = false
+                            }
                     }
                     
                     SliderView(viewSize: proxy.size,
@@ -41,12 +45,35 @@ struct ContentView: View {
 
                     TopControls(cameraManager: cameraManager,
                                 orientationObserver: orientationObserver,
-                                isFlashMenuOpen: $isFlashMenuOpen)
+                                isFlashMenuOpen: $isFlashMenuOpen,
+                                isParameterPanelOpen: $isParameterPanelOpen)
+
+                    if isParameterPanelOpen {
+                        ParameterPanel(filterPipeline: filterPipeline)
+                    }
                 }
                 .statusBarHidden(true)
                 .task {
                     await cameraManager.requestAccess()
                 }
+            }
+        }
+    }
+
+    // MARK: - CameraIconButton
+
+    private struct CameraIconButton: View {
+        let systemName: String
+        let isActive: Bool
+        let action: () -> Void
+
+        var body: some View {
+            Button(action: action) {
+                Image(systemName: systemName)
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(isActive ? .black : .white)
+                    .padding(8)
+                    .background(isActive ? .white : .black.opacity(0.4), in: Circle())
             }
         }
     }
@@ -57,14 +84,21 @@ struct ContentView: View {
         @ObservedObject var cameraManager: CameraManager
         @ObservedObject var orientationObserver: OrientationObserver
         @Binding var isFlashMenuOpen: Bool
+        @Binding var isParameterPanelOpen: Bool
         var body: some View {
             VStack {
                 HStack {
                     FlashModeButton(cameraManager: cameraManager,
                                     orientationObserver: orientationObserver,
-                                    isFlashMenuOpen: $isFlashMenuOpen)
+                                    isFlashMenuOpen: $isFlashMenuOpen,
+                                    isParameterPanelOpen: $isParameterPanelOpen)
                         .padding(.leading, 16)
                     Spacer()
+                    CameraIconButton(systemName: "slider.horizontal.3", isActive: isParameterPanelOpen) {
+                        isParameterPanelOpen.toggle()
+                        if isParameterPanelOpen { isFlashMenuOpen = false }
+                    }
+                    .padding(.trailing, 16)
                 }
                 .padding(.top, 16)
                 Spacer()
@@ -77,24 +111,17 @@ struct ContentView: View {
         @ObservedObject var cameraManager: CameraManager
         @ObservedObject var orientationObserver: OrientationObserver
         @Binding var isFlashMenuOpen: Bool
+        @Binding var isParameterPanelOpen: Bool
         let flashModeMenuOffset = CGSize(width: 36, height: 36)
 
         var body: some View {
-            ZStack(alignment: .topLeading) {
-                // トグルボタン
-                Button {
-                    isFlashMenuOpen.toggle()
-                } label: {
-                    Image(systemName: flashModeSymbol)
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(isFlashMenuOpen ? .black : .white)
-                        .padding(8)
-                        .background(isFlashMenuOpen ? .white : .black.opacity(0.4), in: Circle())
-                }
-                .rotationEffect(orientationObserver.rotationAngle)
-                .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
-                
-                // フラッシュメニュー（トグルON時に表示）
+            CameraIconButton(systemName: flashModeSymbol, isActive: isFlashMenuOpen) {
+                isFlashMenuOpen.toggle()
+                if isFlashMenuOpen { isParameterPanelOpen = false }
+            }
+            .rotationEffect(orientationObserver.rotationAngle)
+            .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
+            .overlay(alignment: .topLeading) {
                 if isFlashMenuOpen {
                     FlashModeMenu(cameraManager: cameraManager,
                                   isFlashMenuOpen: $isFlashMenuOpen)
@@ -189,7 +216,6 @@ struct ContentView: View {
                 .animation(.easeInOut(duration: 0.3),
                            value: orientationObserver.rotationAngle)
                 .offset(sliderOffset)
-                .padding(.horizontal, 0)
                 .onChange(of: orientationObserver.orientation) { _, orientation in
                     withAnimation {
                         sliderWidth(orientation)
@@ -311,6 +337,7 @@ struct ContentView: View {
         #if targetEnvironment(simulator)
         CameraPreviewView(
             frameStore: cameraManager.frameStore,
+            filterPipeline: filterPipeline,
             onTap: { devicePoint, screenPoint in
                 cameraManager.setFocusPoint(devicePoint)
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -322,6 +349,7 @@ struct ContentView: View {
         #else
         CameraPreviewView(
             frameStore: cameraManager.frameStore,
+            filterPipeline: filterPipeline,
             onTap: { devicePoint, screenPoint in
                 cameraManager.setFocusPoint(devicePoint)
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -344,6 +372,52 @@ struct ContentView: View {
                 )
         }
         .ignoresSafeArea()
+    }
+
+    // MARK: - Parameter panel
+
+    private struct ParameterPanel: View {
+        @ObservedObject var filterPipeline: FilterPipeline
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 20) {
+                parameterSlider(
+                    title: "inputLevels",
+                    value: $filterPipeline.inputLevels,
+                    in: 2...20
+                )
+                parameterSlider(
+                    title: "inputEdgeIntensity",
+                    value: $filterPipeline.inputEdgeIntensity,
+                    in: 0...5
+                )
+                parameterSlider(
+                    title: "inputThreshold",
+                    value: $filterPipeline.inputThreshold,
+                    in: 0...1
+                )
+            }
+            .padding(20)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal, 24)
+            .padding(.top, 80)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+
+        private func parameterSlider(title: String, value: Binding<Float>, in range: ClosedRange<Float>) -> some View {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(title)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(String(format: "%.2f", value.wrappedValue))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.primary)
+                }
+                Slider(value: value, in: range)
+            }
+        }
     }
 
     // MARK: - Denied view
