@@ -195,12 +195,16 @@ final class CameraManager: NSObject, ObservableObject {
     }
 
     func setFocusPoint(_ point: CGPoint) {
+        let normalizedPoint = CGPoint(
+            x: min(max(point.x, 0), 1),
+            y: min(max(point.y, 0), 1)
+        )
         guard let device = currentInput?.device else { return }
         sessionQueue.async {
             do {
                 try device.lockForConfiguration()
                 if device.isFocusPointOfInterestSupported {
-                    device.focusPointOfInterest = point
+                    device.focusPointOfInterest = normalizedPoint
                     if device.isFocusModeSupported(.continuousAutoFocus) {
                         device.focusMode = .continuousAutoFocus
                     } else if device.isFocusModeSupported(.autoFocus) {
@@ -208,7 +212,7 @@ final class CameraManager: NSObject, ObservableObject {
                     }
                 }
                 if device.isExposurePointOfInterestSupported {
-                    device.exposurePointOfInterest = point
+                    device.exposurePointOfInterest = normalizedPoint
                     if device.isExposureModeSupported(.continuousAutoExposure) {
                         device.exposureMode = .continuousAutoExposure
                     } else if device.isExposureModeSupported(.autoExpose) {
@@ -216,7 +220,7 @@ final class CameraManager: NSObject, ObservableObject {
                     }
                 }
                 device.unlockForConfiguration()
-                logger.debug("フォーカスポイントを設定: \(point.x, privacy: .public), \(point.y, privacy: .public)")
+                logger.debug("フォーカスポイントを設定: \(normalizedPoint.x, privacy: .public), \(normalizedPoint.y, privacy: .public)")
             } catch {
                 logger.error("フォーカスポイントの設定に失敗: \(error.localizedDescription)")
             }

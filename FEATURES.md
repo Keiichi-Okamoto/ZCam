@@ -177,15 +177,56 @@
         - `slider.horizontal.3`とパラメータViewのローテーション、ドラッグ移動はこの章では実装しない
 
 ## Chapter 7
-    - 座標の整合性の修正
-    - [ ] 700 FocusPoint の座標整合性を修正する
-        - `Chapter 5`で表示を`MTKView`に変更した事によりFocusPoint 表示位置と focusPointOfInterest /
-    exposurePointOfInterest の不一致が発生した。その修正
-    - [ ] 701 パラメータ調整UIの座標・回転対応
-        - [ ] 701-1 `slider.horizontal.3`を端末ローテーションに追従して回転
-        - [ ] 701-2 パラメータViewを端末ローテーションに追従して回転
-        - [ ] 701-3 パラメータViewを指のドラッグで移動可能にする
-        - [ ] 701-4 Portrait / Landscape Left / Landscape Right で既存UIと重ならない
+    - 座標の整合性とローテーション時UIの整理
+    - Chapter 7では、RotateViewという小さな検証アプリで確認した方針をZCamへ反映する。
+    - iPhoneではアプリ自体はPortrait固定のままにし、`MTKView`のカメラプレビューを端末回転でViewごと回転させない。
+    - UI部品だけを`UIDeviceOrientation`に応じて回転・移動する。
+    - 検証アプリのコードをそのまま貼り付けるのではなく、ZCamの既存構造に合わせて設計を移植する。
+    - UI/UXの細かい位置・アニメーション量は、実機またはシミュレータで人が見て判断する。
+        - RotateViewでは検証のためアニメーションを多めに入れている。
+        - ZCam本体では、必要なアニメーションだけを残し、うるさく感じるものは入れない、または控えめにする。
+    - [x] 701 FocusPoint の座標整合性を修正する
+        - `Chapter 5`で表示を`MTKView`に変更した事によりFocusPoint 表示位置と `focusPointOfInterest` / `exposurePointOfInterest` の不一致が発生した。その修正。
+        - タップ取得、正規化、FocusPoint表示は同じ表示領域を基準にする。
+        - `GeometryReader`側もSafe Areaを無視し、`MTKView.bounds`とFocusPoint表示に使うサイズがズレないようにする。
+        - FocusPoint座標は`0...1`の正規化座標で統一する。
+            - 左上: `(0, 0)`
+            - 中央: `(0.5, 0.5)`
+            - 右下: `(1, 1)`
+        - タップ時は`UITapGestureRecognizer`で取得した`UIView.bounds`基準の座標を`0...1`に正規化する。
+        - 正規化した座標をFocusPoint表示に使う。
+        - 同じ正規化座標を`focusPointOfInterest` / `exposurePointOfInterest`に渡す。
+        - ダブルタップ時はFocusPointを中央`(0.5, 0.5)`に戻す。
+        - 端末ローテーション時もFocusPointを中央`(0.5, 0.5)`に戻す。
+        - 画面端付近で実際のfocus/exposure位置が見た目と一致するかは実機確認項目とする。
+    - [ ] 702 パラメータ調整UIの座標・回転対応
+        - [ ] 702-1 `slider.horizontal.3`を端末ローテーションに追従して回転
+        - [ ] 702-2 パラメータViewを端末ローテーションに追従して回転
+        - [ ] 702-3 パラメータViewを指のドラッグで移動可能にする
+        - [ ] 702-4 Portrait / Landscape Left / Landscape Right で既存UIと重ならない
+        - FilterパラメータViewは`ZStack`直下に表示する。
+        - FilterパラメータViewのドラッグ位置は`position`または`offset`で管理する。
+        - ドラッグ中の移動は`DragGesture.translation`を使い、ドラッグ開始時にViewの中心が指位置へ飛ばないようにする。
+        - ドラッグ中は不要なアニメーションを入れない。
+    - [ ] 703 FlashMode UIの座標・回転対応
+        - FlashModeボタンを端末ローテーションに追従して回転する。
+        - FlashModeボタンの配置はSwiftUIレイアウトに任せ、ボタン内のアイコンを`rotationEffect`で回転する。
+        - FlashModeViewは`ZStack`直下に表示する。
+        - FlashModeViewは端末ローテーションに追従して回転・移動する。
+        - FlashModeViewとFilterパラメータViewは排他表示にする。
+    - [ ] 704 Zoom / Shutter / Top Controls のローテーション実装を整理する
+        - Zoom Sliderは`viewSize`と`UIDeviceOrientation`から、幅・位置・回転角を計算する。
+        - `@State`に位置や幅を保持して逐次更新するのではなく、可能な範囲で算出プロパティにする。
+        - ShutterButtonは丸い外形自体を回転対象にしない。
+        - ShutterButton内に文字や向き依存の表示がある場合だけ、その要素を回転する。
+        - 各UIで重複している回転角計算は`OrientationObserver`または共通処理に寄せる。
+    - 受け入れ条件:
+        - Portrait / Landscape Left / Landscape Right でFocusPoint表示がタップ位置へ移動する。
+        - ダブルタップでFocusPointが中央に戻る。
+        - 端末ローテーション時にFocusPointが中央に戻る。
+        - Safe Areaの影響で、中央タップが中央からズレない。
+        - `xcodebuild`でビルドが成功する。
+        - focus/exposureの実際の合焦位置は実機確認項目としてPR本文に明記する。
 
 ## Chapter 8
     - [ ] `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加

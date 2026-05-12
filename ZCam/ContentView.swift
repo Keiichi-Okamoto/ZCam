@@ -13,6 +13,8 @@ struct ContentView: View {
     @StateObject private var orientationObserver = OrientationObserver()
     @StateObject private var filterPipeline = FilterPipeline()
     @State private var focusIndicatorPosition: CGPoint = CGPoint(x: 0.5, y: 0.5)
+    @State private var focusCenterViewPoint: CGPoint = CGPoint(x: 0.5, y: 0.5)
+    @State private var focusCenterDevicePoint: CGPoint = CGPoint(x: 0.5, y: 0.5)
     @State private var isFlashMenuOpen = false
     @State private var isParameterPanelOpen = false
 
@@ -20,44 +22,54 @@ struct ContentView: View {
         GeometryReader { proxy in
             if cameraManager.authorizationStatus == .denied || cameraManager.authorizationStatus == .restricted {
                 deniedView
+                    .frame(width: proxy.size.width, height: proxy.size.height)
             } else {
                 ZStack {
                     cameraBackground
-                        .ignoresSafeArea()
-                    focusIndicator
-
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                    focusIndicator(viewSize: proxy.size)
                     if isFlashMenuOpen || isParameterPanelOpen {
                         Color.clear
                             .contentShape(Rectangle())
-                            .ignoresSafeArea()
+                            .frame(width: proxy.size.width, height: proxy.size.height)
                             .onTapGesture {
                                 isFlashMenuOpen = false
                                 isParameterPanelOpen = false
                             }
                     }
-                    
-                    SliderView(viewSize: proxy.size,
-                               cameraManager: cameraManager,
-                               orientationObserver: orientationObserver)
-
-                    ShutterButtonView(viewSize: proxy.size,
-                                      orientationObserver: orientationObserver)
-
                     TopControls(cameraManager: cameraManager,
                                 orientationObserver: orientationObserver,
                                 isFlashMenuOpen: $isFlashMenuOpen,
                                 isParameterPanelOpen: $isParameterPanelOpen)
-
+                    ShutterButtonView(viewSize: proxy.size,
+                                      orientationObserver: orientationObserver)
+                    SliderView(viewSize: proxy.size,
+                               cameraManager: cameraManager,
+                               orientationObserver: orientationObserver)
                     if isParameterPanelOpen {
                         ParameterPanel(filterPipeline: filterPipeline)
+                            .frame(width: proxy.size.width, height: proxy.size.height)
                     }
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipped()
+                .ignoresSafeArea()
                 .statusBarHidden(true)
+                .onChange(of: orientationObserver.orientation) { _, orientation in
+                    guard orientation == .portrait ||
+                          orientation == .landscapeLeft ||
+                          orientation == .landscapeRight else {
+                        return
+                    }
+                    resetFocusPointToCenter()
+                }
                 .task {
                     await cameraManager.requestAccess()
                 }
             }
         }
+        .ignoresSafeArea()
     }
 
     // MARK: - CameraIconButton
@@ -338,11 +350,15 @@ struct ContentView: View {
         CameraPreviewView(
             frameStore: cameraManager.frameStore,
             filterPipeline: filterPipeline,
-            onTap: { devicePoint, screenPoint in
+            onTap: { viewPoint, devicePoint in
                 cameraManager.setFocusPoint(devicePoint)
                 withAnimation(.easeInOut(duration: 0.2)) {
-                    focusIndicatorPosition = screenPoint
+                    focusIndicatorPosition = viewPoint
                 }
+            },
+            onCenterPointChange: { viewPoint, devicePoint in
+                focusCenterViewPoint = viewPoint
+                focusCenterDevicePoint = devicePoint
             },
             zoomFactor: cameraManager.sliderValue
         )
@@ -350,28 +366,40 @@ struct ContentView: View {
         CameraPreviewView(
             frameStore: cameraManager.frameStore,
             filterPipeline: filterPipeline,
-            onTap: { devicePoint, screenPoint in
+            onTap: { viewPoint, devicePoint in
                 cameraManager.setFocusPoint(devicePoint)
                 withAnimation(.easeInOut(duration: 0.2)) {
-                    focusIndicatorPosition = screenPoint
+                    focusIndicatorPosition = viewPoint
                 }
+            },
+            onCenterPointChange: { viewPoint, devicePoint in
+                focusCenterViewPoint = viewPoint
+                focusCenterDevicePoint = devicePoint
             }
         )
         #endif
     }
 
     // MARK: - Focus indicator
-    private var focusIndicator: some View {
-        GeometryReader { geometry in
+    private func focusIndicator(viewSize: CGSize) -> some View {
+        ZStack {
             Image(systemName: "dot.crosshair")
                 .font(.system(size: 60))
                 .foregroundStyle(.green)
                 .position(
-                    x: focusIndicatorPosition.x * geometry.size.width,
-                    y: focusIndicatorPosition.y * geometry.size.height
+                    x: focusIndicatorPosition.x * viewSize.width,
+                    y: focusIndicatorPosition.y * viewSize.height
                 )
         }
+        .frame(width: viewSize.width, height: viewSize.height)
         .ignoresSafeArea()
+    }
+
+    private func resetFocusPointToCenter() {
+        cameraManager.setFocusPoint(focusCenterDevicePoint)
+        withAnimation(.easeInOut(duration: 0.2)) {
+            focusIndicatorPosition = focusCenterViewPoint
+        }
     }
 
     // MARK: - Parameter panel
