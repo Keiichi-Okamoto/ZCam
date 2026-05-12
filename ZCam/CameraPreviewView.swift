@@ -18,12 +18,6 @@ struct CameraPreviewView: UIViewRepresentable {
         view.enableSetNeedsDisplay = false
         view.isPaused = false
         view.colorPixelFormat = .bgra8Unorm
-        view.onBoundsChange = { [weak coordinator = context.coordinator] bounds in
-            coordinator?.reportCenterPoint(in: bounds)
-        }
-        view.onViewLayout = { [weak coordinator = context.coordinator] view in
-            coordinator?.reportCenterPoint(in: view)
-        }
 
         if let device = MTLCreateSystemDefaultDevice(),
            let renderer = MetalRenderer(device: device, frameStore: frameStore, filterPipeline: filterPipeline) {
@@ -89,11 +83,6 @@ struct CameraPreviewView: UIViewRepresentable {
             onCenterPointChange?(center.viewPoint, center.devicePoint)
         }
 
-        func reportCenterPoint(in bounds: CGRect) {
-            let center = centerPoint(in: bounds)
-            onCenterPointChange?(center.viewPoint, center.devicePoint)
-        }
-
         private func normalizedPoint(from point: CGPoint, in bounds: CGRect) -> CGPoint {
             guard bounds.width > 0, bounds.height > 0 else {
                 return CGPoint(x: 0.5, y: 0.5)
@@ -131,9 +120,6 @@ struct CameraPreviewView: UIViewRepresentable {
     }
 
     final class CenterReportingMTKView: MTKView {
-        var onBoundsChange: ((CGRect) -> Void)?
-        var onViewLayout: ((UIView) -> Void)?
-
         var observation1: NSKeyValueObservation?
         var observation2: NSKeyValueObservation?
 
@@ -155,11 +141,5 @@ struct CameraPreviewView: UIViewRepresentable {
         required init(coder: NSCoder) {
             super.init(coder: coder)
         }
-
-//        override func layoutSubviews() {
-//            super.layoutSubviews()
-//            onBoundsChange?(bounds)
-//            onViewLayout?(self)
-//        }
     }
 }
