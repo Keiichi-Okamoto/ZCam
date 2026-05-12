@@ -58,6 +58,7 @@ struct CameraPreviewView: UIViewRepresentable {
         var onTap: ((_ viewPoint: CGPoint, _ devicePoint: CGPoint) -> Void)?
         var onCenterPointChange: ((_ viewPoint: CGPoint, _ devicePoint: CGPoint) -> Void)?
         var retainedRenderer: MetalRenderer?
+        private var lastCenterPoint: (viewPoint: CGPoint, devicePoint: CGPoint)?
 
         init(onTap: ((_ viewPoint: CGPoint, _ devicePoint: CGPoint) -> Void)?,
              onCenterPointChange: ((_ viewPoint: CGPoint, _ devicePoint: CGPoint) -> Void)?) {
@@ -80,6 +81,8 @@ struct CameraPreviewView: UIViewRepresentable {
 
         func reportCenterPoint(in view: UIView) {
             let center = centerPoint(in: view)
+            guard shouldReportCenterPoint(center) else { return }
+            lastCenterPoint = center
             onCenterPointChange?(center.viewPoint, center.devicePoint)
         }
 
@@ -95,6 +98,8 @@ struct CameraPreviewView: UIViewRepresentable {
         }
 
         private func devicePoint(from viewPoint: CGPoint) -> CGPoint {
+            // Captured frames are rendered portrait-up with videoRotationAngle = 90.
+            // AVCaptureDevice pointOfInterest remains in the camera sensor's landscape coordinate space.
             CGPoint(
                 x: min(max(viewPoint.y, 0), 1),
                 y: min(max(1 - viewPoint.x, 0), 1)
@@ -117,6 +122,16 @@ struct CameraPreviewView: UIViewRepresentable {
             let viewPoint = normalizedPoint(from: centerInView, in: view.bounds)
             return (viewPoint, devicePoint(from: viewPoint))
         }
+
+        private func shouldReportCenterPoint(_ point: (viewPoint: CGPoint, devicePoint: CGPoint)) -> Bool {
+            guard let lastCenterPoint else { return true }
+            return !approximatelyEqual(point.viewPoint, lastCenterPoint.viewPoint) ||
+                !approximatelyEqual(point.devicePoint, lastCenterPoint.devicePoint)
+        }
+
+        private func approximatelyEqual(_ lhs: CGPoint, _ rhs: CGPoint) -> Bool {
+            abs(lhs.x - rhs.x) < 0.0001 && abs(lhs.y - rhs.y) < 0.0001
+        }
     }
 
     final class CenterReportingMTKView: MTKView {
@@ -125,7 +140,6 @@ struct CameraPreviewView: UIViewRepresentable {
 
         convenience init() {
             self.init(frame: CGRect(x: 0, y: 0, width: 0, height: 0), device: nil)
-            print("")
             observation1 = observe(\.frame, options: [.new]) { _, change in
                 print("\(#function) \(change.newValue?.width ?? -1) \(change.newValue?.height ?? -1)")
             }
