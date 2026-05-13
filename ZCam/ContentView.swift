@@ -52,8 +52,6 @@ struct ContentView: View {
                             .frame(width: proxy.size.width, height: proxy.size.height)
                     }
                 }
-                .frame(width: proxy.size.width, height: proxy.size.height)
-                .clipped()
                 .ignoresSafeArea()
                 .statusBarHidden(true)
                 .onChange(of: orientationObserver.orientation) { _, orientation in
@@ -212,11 +210,9 @@ struct ContentView: View {
         let viewSize: CGSize
         @ObservedObject var cameraManager: CameraManager
         @ObservedObject var orientationObserver: OrientationObserver
-        @State var sliderWidth: CGFloat = 0
-        @State var sliderOffset = CGSize.zero
 
         var body: some View {
-            HStack {
+            ZStack {
                 ZoomSliderView(
                     sliderValue: $cameraManager.sliderValue,
                     minZoom: cameraManager.sliderMinZoom,
@@ -227,48 +223,34 @@ struct ContentView: View {
                 .rotationEffect(orientationObserver.rotationAngle)
                 .animation(.easeInOut(duration: 0.3),
                            value: orientationObserver.rotationAngle)
-                .offset(sliderOffset)
-                .onChange(of: orientationObserver.orientation) { _, orientation in
-                    withAnimation {
-                        sliderWidth(orientation)
-                        sliderOffset(orientation)
-                    }
-                }
-                .onAppear {
-                    let orientation = orientationObserver.orientation
-                    sliderWidth(orientation)
-                    sliderOffset(orientation)
-                }
+                .position(sliderPosition)
+                .animation(.easeInOut(duration: 0.3),
+                           value: orientationObserver.orientation)
             }
+            .frame(width: viewSize.width, height: viewSize.height)
         }
 
-        private func sliderWidth(_ orientation: UIDeviceOrientation) {
-            let widthRatio = 0.8
-            switch orientation {
+        private var sliderWidth: CGFloat {
+            switch orientationObserver.orientation {
             case .portrait:
-                sliderWidth = viewSize.width * widthRatio
+                return viewSize.width * 0.8
             case .landscapeLeft, .landscapeRight:
-                sliderWidth = viewSize.height * widthRatio
+                return viewSize.height * 0.8
             default:
-                break
+                return viewSize.width * 0.8
             }
         }
 
-        private func sliderOffset(_ orientation: UIDeviceOrientation) {
-            let screenWidth = viewSize.width
-            let screenHeight = viewSize.height
-
-            // ZStack は中央基準なので、offset は画面中心からの相対距離で指定する
-            // 各値は実機で目視確認しながら試行錯誤で決定した
-            switch orientation {
+        private var sliderPosition: CGPoint {
+            switch orientationObserver.orientation {
             case .portrait:
-                sliderOffset = CGSize(width: 0, height: screenHeight / 2 - 180)
+                return CGPoint(x: viewSize.width / 2, y: viewSize.height - 180)
             case .landscapeLeft:
-                sliderOffset = CGSize(width: -screenWidth * 3 / 4 + 50, height: 0)
+                return CGPoint(x: 72, y: viewSize.height / 2)
             case .landscapeRight:
-                sliderOffset = CGSize(width: screenWidth / 4 - 31.0 - 50, height: 0)
+                return CGPoint(x: viewSize.width - 72, y: viewSize.height / 2)
             default:
-                break
+                return CGPoint(x: viewSize.width / 2, y: viewSize.height - 180)
             }
         }
     }
@@ -296,37 +278,18 @@ struct ContentView: View {
     private struct ShutterButtonView: View {
         let viewSize: CGSize
         @ObservedObject var orientationObserver: OrientationObserver
-        @State var shutterButtonOffset = CGSize.zero
 
         var body: some View {
             HStack(alignment: .center) {
                 ShutterButton()
-                    .rotationEffect(orientationObserver.rotationAngle)
                     .offset(shutterButtonOffset)
-                    .onChange(of: orientationObserver.orientation) { _, orientation in
-                        withAnimation {
-                            shutterButtonOffset(orientation)
-                        }
-                    }
-                    .onAppear {
-                        let orientation = orientationObserver.orientation
-                        shutterButtonOffset(orientation)
-                    }
+                    .animation(.easeInOut(duration: 0.3),
+                               value: orientationObserver.orientation)
             }
         }
 
-        private func shutterButtonOffset(_ orientation: UIDeviceOrientation) {
-            let screenHeight = viewSize.height
-            // ZStack は中央基準なので、offset は画面中心からの相対距離で指定する
-            // 各値は実機で目視確認しながら試行錯誤で決定した
-            switch orientation {
-            case .portrait:
-                shutterButtonOffset = CGSize(width: 0, height: screenHeight / 2 - 100)
-            case .landscapeLeft, .landscapeRight:
-                shutterButtonOffset = CGSize(width: -100, height: screenHeight / 2 - 100)
-            default:
-                break
-            }
+        private var shutterButtonOffset: CGSize {
+            CGSize(width: 0, height: viewSize.height / 2 - 100)
         }
     }
 
