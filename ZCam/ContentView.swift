@@ -48,7 +48,9 @@ struct ContentView: View {
                                cameraManager: cameraManager,
                                orientationObserver: orientationObserver)
                     if isParameterPanelOpen {
-                        ParameterPanel(filterPipeline: filterPipeline)
+                        ParameterPanel(filterPipeline: filterPipeline,
+                                       viewSize: proxy.size,
+                                       orientationObserver: orientationObserver)
                             .frame(width: proxy.size.width, height: proxy.size.height)
                     }
                 }
@@ -108,6 +110,8 @@ struct ContentView: View {
                         isParameterPanelOpen.toggle()
                         if isParameterPanelOpen { isFlashMenuOpen = false }
                     }
+                    .rotationEffect(orientationObserver.rotationAngle)
+                    .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
                     .padding(.trailing, 16)
                 }
                 .padding(.top, 16)
@@ -367,8 +371,23 @@ struct ContentView: View {
 
     private struct ParameterPanel: View {
         @ObservedObject var filterPipeline: FilterPipeline
+        let viewSize: CGSize
+        @ObservedObject var orientationObserver: OrientationObserver
+        @State private var restingOffset: CGSize = .zero
+        @GestureState private var dragTranslation: CGSize = .zero
 
         var body: some View {
+            panelContent
+                .frame(width: panelWidth, height: panelHeight)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+                .rotationEffect(orientationObserver.rotationAngle)
+                .position(panelPosition)
+                .gesture(panelDragGesture, including: .gesture)
+                .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
+                .frame(width: viewSize.width, height: viewSize.height)
+        }
+
+        private var panelContent: some View {
             VStack(alignment: .leading, spacing: 20) {
                 parameterSlider(
                     title: "inputLevels",
@@ -387,10 +406,79 @@ struct ContentView: View {
                 )
             }
             .padding(20)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal, 24)
-            .padding(.top, 80)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+
+        private var panelDragGesture: some Gesture {
+            DragGesture()
+                .updating($dragTranslation) { value, state, _ in
+                    state = value.translation
+                }
+                .onEnded { value in
+                    let proposedOffset = CGSize(
+                        width: restingOffset.width + value.translation.width,
+                        height: restingOffset.height + value.translation.height
+                    )
+                    let proposedPosition = position(from: proposedOffset)
+                    let clampedPosition = clamped(proposedPosition)
+                    restingOffset = CGSize(
+                        width: clampedPosition.x - defaultPosition.x,
+                        height: clampedPosition.y - defaultPosition.y
+                    )
+                }
+        }
+
+        private var panelWidth: CGFloat {
+            min(viewSize.width - 48, 360)
+        }
+
+        private var panelHeight: CGFloat {
+            228
+        }
+
+        private var panelPosition: CGPoint {
+            clamped(
+                position(
+                    from: CGSize(
+                        width: restingOffset.width + dragTranslation.width,
+                        height: restingOffset.height + dragTranslation.height
+                    )
+                )
+            )
+        }
+
+        private var defaultPosition: CGPoint {
+            switch orientationObserver.orientation {
+            case .landscapeLeft:
+                return CGPoint(x: viewSize.width - 132, y: viewSize.height / 2)
+            case .landscapeRight:
+                return CGPoint(x: 132, y: viewSize.height / 2)
+            default:
+                return CGPoint(x: viewSize.width / 2, y: 210)
+            }
+        }
+
+        private func position(from offset: CGSize) -> CGPoint {
+            CGPoint(
+                x: defaultPosition.x + offset.width,
+                y: defaultPosition.y + offset.height
+            )
+        }
+
+        private func clamped(_ position: CGPoint) -> CGPoint {
+            let inset = panelInset
+            return CGPoint(
+                x: min(max(position.x, inset.width), viewSize.width - inset.width),
+                y: min(max(position.y, inset.height), viewSize.height - inset.height)
+            )
+        }
+
+        private var panelInset: CGSize {
+            switch orientationObserver.orientation {
+            case .landscapeLeft, .landscapeRight:
+                return CGSize(width: panelHeight / 2 + 16, height: panelWidth / 2 + 16)
+            default:
+                return CGSize(width: panelWidth / 2 + 16, height: panelHeight / 2 + 16)
+            }
         }
 
         private func parameterSlider(title: String, value: Binding<Float>, in range: ClosedRange<Float>) -> some View {

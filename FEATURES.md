@@ -214,26 +214,26 @@
             - SliderViewを表示しても、MTKViewやZStackのレイアウト境界が大きくならない。
             - Portrait / Landscape Left / Landscape RightでShutterButtonが意図した位置に表示される。
             - `xcodebuild`でビルドが成功する。
-    - [ ] 703 パラメータ調整UIの座標・回転対応
-        - [ ] 703-1 `slider.horizontal.3`を端末ローテーションに追従して回転
-        - [ ] 703-2 パラメータViewを端末ローテーションに追従して回転
-        - [ ] 703-3 パラメータViewを指のドラッグで移動可能にする
-        - [ ] 703-4 Portrait / Landscape Left / Landscape Right で既存UIと重ならない
+    - [x] 703 パラメータ調整UIの座標・回転対応
+        - [x] 703-1 `slider.horizontal.3`を端末ローテーションに追従して回転
+        - [x] 703-2 パラメータViewを端末ローテーションに追従して回転
+        - [x] 703-3 パラメータViewを指のドラッグで移動可能にする
+        - [x] 703-4 Portrait / Landscape Left / Landscape Right で既存UIと重ならない
         - FilterパラメータViewは`ZStack`直下に表示する。
         - FilterパラメータViewのドラッグ位置は`position`または`offset`で管理する。
         - ドラッグ中の移動は`DragGesture.translation`を使い、ドラッグ開始時にViewの中心が指位置へ飛ばないようにする。
         - ドラッグ中は不要なアニメーションを入れない。
-    - [ ] 704 FlashMode UIの座標・回転対応
-        - FlashModeボタンを端末ローテーションに追従して回転する。
-        - FlashModeボタンの配置はSwiftUIレイアウトに任せ、ボタン内のアイコンを`rotationEffect`で回転する。
-        - FlashModeViewは`ZStack`直下に表示する。
-        - FlashModeViewは端末ローテーションに追従して回転・移動する。
-        - FlashModeViewとFilterパラメータViewは排他表示にする。
-    - [ ] 705 Zoom / Shutter / Top Controls のローテーション実装を仕上げる
+    - [x] 704 FlashMode UIの座標・回転対応（702で解決済み・個別PR不要）
+        - FlashModeボタンは端末ローテーションに追従して回転できている。
+        - FlashModeViewは端末ローテーションに追従して回転・移動できている。
+        - FlashModeViewとFilterパラメータViewは排他表示できている。
+        - 702でUI座標面を整理したことで、FlashMode UIも正常に見えるようになった。
+    - [ ] 705 Zoom / Shutter / Top Controls のローテーション実装の最終確認
         - 702で整理したUI座標面を前提に、Zoom / Shutter / Top Controlsの見た目と操作感を最終調整する。
         - ShutterButtonは丸い外形自体を回転対象にしない。
         - ShutterButton内に文字や向き依存の表示がある場合だけ、その要素を回転する。
         - 各UIで重複している回転角計算は`OrientationObserver`または共通処理に寄せる。
+        - 702の対応で実質的に解決している可能性があるため、まず現状確認を行い、追加作業が不要ならOKとする。
     - 受け入れ条件:
         - Portrait / Landscape Left / Landscape Right でFocusPoint表示がタップ位置へ移動する。
         - ダブルタップでFocusPointが中央に戻る。
