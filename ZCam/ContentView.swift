@@ -375,6 +375,9 @@ struct ContentView: View {
         @ObservedObject var orientationObserver: OrientationObserver
         @State private var restingOffset: CGSize = .zero
         @GestureState private var dragTranslation: CGSize = .zero
+        private let panelEdgeInset: CGFloat = 16
+        private let panelMaxWidth: CGFloat = 360
+        private let fixedPanelHeight: CGFloat = 228
 
         var body: some View {
             panelContent
@@ -385,6 +388,9 @@ struct ContentView: View {
                 .gesture(panelDragGesture, including: .gesture)
                 .animation(.easeInOut(duration: 0.3), value: orientationObserver.orientation)
                 .frame(width: viewSize.width, height: viewSize.height)
+                .onChange(of: orientationObserver.orientation) { _, _ in
+                    restingOffset = .zero
+                }
         }
 
         private var panelContent: some View {
@@ -428,11 +434,16 @@ struct ContentView: View {
         }
 
         private var panelWidth: CGFloat {
-            min(viewSize.width - 48, 360)
+            let horizontalLimit = viewSize.width - panelEdgeInset * 2
+            if orientationObserver.isLandscape {
+                let rotatedHeightLimit = viewSize.height - panelEdgeInset * 2
+                return min(horizontalLimit, rotatedHeightLimit, panelMaxWidth)
+            }
+            return min(horizontalLimit, panelMaxWidth)
         }
 
         private var panelHeight: CGFloat {
-            228
+            fixedPanelHeight
         }
 
         private var panelPosition: CGPoint {
@@ -449,9 +460,9 @@ struct ContentView: View {
         private var defaultPosition: CGPoint {
             switch orientationObserver.orientation {
             case .landscapeLeft:
-                return CGPoint(x: viewSize.width - 132, y: viewSize.height / 2)
+                return CGPoint(x: viewSize.width - panelInset.width, y: viewSize.height / 2)
             case .landscapeRight:
-                return CGPoint(x: 132, y: viewSize.height / 2)
+                return CGPoint(x: panelInset.width, y: viewSize.height / 2)
             default:
                 return CGPoint(x: viewSize.width / 2, y: 210)
             }
@@ -475,9 +486,15 @@ struct ContentView: View {
         private var panelInset: CGSize {
             switch orientationObserver.orientation {
             case .landscapeLeft, .landscapeRight:
-                return CGSize(width: panelHeight / 2 + 16, height: panelWidth / 2 + 16)
+                return CGSize(
+                    width: panelHeight / 2 + panelEdgeInset,
+                    height: panelWidth / 2 + panelEdgeInset
+                )
             default:
-                return CGSize(width: panelWidth / 2 + 16, height: panelHeight / 2 + 16)
+                return CGSize(
+                    width: panelWidth / 2 + panelEdgeInset,
+                    height: panelHeight / 2 + panelEdgeInset
+                )
             }
         }
 
