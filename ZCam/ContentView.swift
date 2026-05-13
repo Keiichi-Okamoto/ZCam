@@ -283,8 +283,6 @@ struct ContentView: View {
             HStack(alignment: .center) {
                 ShutterButton()
                     .offset(shutterButtonOffset)
-                    .animation(.easeInOut(duration: 0.3),
-                               value: orientationObserver.orientation)
             }
         }
 
