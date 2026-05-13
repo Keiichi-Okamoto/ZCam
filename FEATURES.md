@@ -228,7 +228,7 @@
         - FlashModeViewは端末ローテーションに追従して回転・移動できている。
         - FlashModeViewとFilterパラメータViewは排他表示できている。
         - 702でUI座標面を整理したことで、FlashMode UIも正常に見えるようになった。
-    - [ ] 705 Zoom / Shutter / Top Controls のローテーション実装の最終確認
+    - [x] 705 Zoom / Shutter / Top Controls のローテーション実装の最終確認
         - 702で整理したUI座標面を前提に、Zoom / Shutter / Top Controlsの見た目と操作感を最終調整する。
         - ShutterButtonは丸い外形自体を回転対象にしない。
         - ShutterButton内に文字や向き依存の表示がある場合だけ、その要素を回転する。
