@@ -59,7 +59,7 @@
     - [x] 402-3 Zoom用スラーダーの実装
         - シャッターボタンの上に配置
         - 左を最小、右を最大とする
-    - [ ] 402-4 builtInWideAngleCameraの最小倍率を1とする
+    - [x] 402-4 builtInWideAngleCameraの最小倍率を1とする
     - [x] 402-5 デフォルトは
         - 実機: x1
         - シミュレータ: x1.5 
@@ -153,16 +153,16 @@
             - CIMultiplyBlendMode
                 - `inputImage`に`CIColorPosterize`の出力、`inputBackgroundImage`に`CILineOverlay`の出力
         - [x] 601-2 シミュレータ画像にも同じフィルターを適用
-    - [ ] 602 パラメータ調整用パネルの表示とUserDefaults
-        - [ ] 602-1 画面右上に`slider.horizontal.3`を表示
-        - [ ] 602-2 `slider.horizontal.3`のタップでパラメータ表示のためのViewの表示
+    - [x] 602 パラメータ調整用パネルの表示とUserDefaults
+        - [x] 602-1 画面右上に`slider.horizontal.3`を表示
+        - [x] 602-2 `slider.horizontal.3`のタップでパラメータ表示のためのViewの表示
             - Viewはブラーを掛けた半透明で形状はRoundRect。
-        - [ ] 602-3 Viewには以下の3つを操作するSliderを表示 (タイトルと現在の値をスライダの上部に)
+        - [x] 602-3 Viewには以下の3つを操作するSliderを表示 (タイトルと現在の値をスライダの上部に)
             - 各フィルタの初期値は`setDefaults()`の値
             - inputLevels (CIColorPosterize) : 2...20, Step = 0.01
             - inputEdgeIntensity (CILineOverlay) : 0...5, Step = 0.01
             - inputThreshold (CILineOverlay) : 0...1, Step = 0.01
-        - [ ] 602-4 各Sliderの移動で即時に画面に反映
+        - [x] 602-4 各Sliderの移動で即時に画面に反映
             - UserDefaultsに保存し、次回起動時にはそれを参照する
             | Parameter | UserDefaults key |
             | --- | --- |
@@ -199,24 +199,38 @@
         - ダブルタップ時はFocusPointを中央`(0.5, 0.5)`に戻す。
         - 端末ローテーション時もFocusPointを中央`(0.5, 0.5)`に戻す。
         - 画面端付近で実際のfocus/exposure位置が見た目と一致するかは実機確認項目とする。
-    - [ ] 702 パラメータ調整UIの座標・回転対応
-        - [ ] 702-1 `slider.horizontal.3`を端末ローテーションに追従して回転
-        - [ ] 702-2 パラメータViewを端末ローテーションに追従して回転
-        - [ ] 702-3 パラメータViewを指のドラッグで移動可能にする
-        - [ ] 702-4 Portrait / Landscape Left / Landscape Right で既存UIと重ならない
+    - [x] 702 UI座標面の整理
+        - 701でFocusPoint / MTKView / タップ面の座標は揃えたが、既存UIの一部は過去のレイアウト崩れを前提に`offset`で補正されている。
+        - FlashMode / Filterパラメータのローテーション対応に入る前に、既存UIを同じ座標面へ戻す。
+        - SliderViewは`offset`で見た目だけ移動する実装をやめる。
+        - SliderViewは`viewSize`と`UIDeviceOrientation`から、幅・位置・回転角を計算し、`position`ベースで明示配置する。
+        - SliderViewの位置や幅は、可能な範囲で`@State`ではなく算出プロパティにする。
+        - ShutterButtonViewは、SliderViewなど他UIによるレイアウトの歪みを前提にした補正をやめる。
+        - ShutterButtonViewのPortrait / Landscapeで不要に異なる`offset`を使わない。
+        - ZStack上の主要UIは、同じ`viewSize`を基準に配置されること。
+        - このタスクではFlashMode / FilterパラメータViewの本格的な移動・ドラッグ対応は行わない。
+        - 受け入れ条件:
+            - SliderViewを表示しても、FlashModeボタン / Filterパラメータボタン / ShutterButtonが画面外へ押し出されない。
+            - SliderViewを表示しても、MTKViewやZStackのレイアウト境界が大きくならない。
+            - Portrait / Landscape Left / Landscape RightでShutterButtonが意図した位置に表示される。
+            - `xcodebuild`でビルドが成功する。
+    - [ ] 703 パラメータ調整UIの座標・回転対応
+        - [ ] 703-1 `slider.horizontal.3`を端末ローテーションに追従して回転
+        - [ ] 703-2 パラメータViewを端末ローテーションに追従して回転
+        - [ ] 703-3 パラメータViewを指のドラッグで移動可能にする
+        - [ ] 703-4 Portrait / Landscape Left / Landscape Right で既存UIと重ならない
         - FilterパラメータViewは`ZStack`直下に表示する。
         - FilterパラメータViewのドラッグ位置は`position`または`offset`で管理する。
         - ドラッグ中の移動は`DragGesture.translation`を使い、ドラッグ開始時にViewの中心が指位置へ飛ばないようにする。
         - ドラッグ中は不要なアニメーションを入れない。
-    - [ ] 703 FlashMode UIの座標・回転対応
+    - [ ] 704 FlashMode UIの座標・回転対応
         - FlashModeボタンを端末ローテーションに追従して回転する。
         - FlashModeボタンの配置はSwiftUIレイアウトに任せ、ボタン内のアイコンを`rotationEffect`で回転する。
         - FlashModeViewは`ZStack`直下に表示する。
         - FlashModeViewは端末ローテーションに追従して回転・移動する。
         - FlashModeViewとFilterパラメータViewは排他表示にする。
-    - [ ] 704 Zoom / Shutter / Top Controls のローテーション実装を整理する
-        - Zoom Sliderは`viewSize`と`UIDeviceOrientation`から、幅・位置・回転角を計算する。
-        - `@State`に位置や幅を保持して逐次更新するのではなく、可能な範囲で算出プロパティにする。
+    - [ ] 705 Zoom / Shutter / Top Controls のローテーション実装を仕上げる
+        - 702で整理したUI座標面を前提に、Zoom / Shutter / Top Controlsの見た目と操作感を最終調整する。
         - ShutterButtonは丸い外形自体を回転対象にしない。
         - ShutterButton内に文字や向き依存の表示がある場合だけ、その要素を回転する。
         - 各UIで重複している回転角計算は`OrientationObserver`または共通処理に寄せる。
