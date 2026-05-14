@@ -1,3 +1,4 @@
+import AudioToolbox
 @preconcurrency import AVFoundation
 import Combine
 import CoreImage
@@ -27,6 +28,7 @@ final class CameraManager: NSObject, ObservableObject {
     private let sessionQueue = DispatchQueue(label: "com.example.ZCam.sessionQueue")
     private let videoOutputQueue = DispatchQueue(label: "com.example.ZCam.videoOutputQueue")
     private let videoOutput = AVCaptureVideoDataOutput()
+    nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
 
     override init() {
         super.init()
@@ -56,7 +58,7 @@ final class CameraManager: NSObject, ObservableObject {
 
     private func configure() async {
         let result: (AVCaptureDeviceInput?, Bool) = await withCheckedContinuation { continuation in
-            sessionQueue.async { [session, videoOutput, videoOutputQueue] in
+            sessionQueue.async { [session, videoOutput, videoOutputQueue, photoOutput] in
                 guard let device = Self.preferredBackCamera() else {
                     logger.error("背面カメラが見つかりません")
                     continuation.resume(returning: (nil, false))
@@ -85,6 +87,12 @@ final class CameraManager: NSObject, ObservableObject {
                         return
                     }
                     session.addOutput(videoOutput)
+
+                    #if !targetEnvironment(simulator)
+                    if session.canAddOutput(photoOutput) {
+                        session.addOutput(photoOutput)
+                    }
+                    #endif
 
                     if let connection = videoOutput.connection(with: .video) {
                         if connection.isVideoRotationAngleSupported(90) {
@@ -231,11 +239,39 @@ final class CameraManager: NSObject, ObservableObject {
         setFocusPoint(CGPoint(x: 0.5, y: 0.5))
     }
 
+    func capturePhoto() {
+        #if targetEnvironment(simulator)
+        AudioServicesPlaySystemSound(1108)
+        #else
+        let mode = flashMode
+        sessionQueue.async { [photoOutput] in
+            let settings = AVCapturePhotoSettings()
+            if photoOutput.supportedFlashModes.contains(mode) {
+                settings.flashMode = mode
+            }
+            photoOutput.capturePhoto(with: settings, delegate: self)
+        }
+        #endif
+    }
+
     func stop() {
         guard session.isRunning else { return }
         sessionQueue.async { [session] in
             session.stopRunning()
         }
+    }
+}
+
+extension CameraManager: AVCapturePhotoCaptureDelegate {
+    nonisolated func photoOutput(_ output: AVCapturePhotoOutput,
+                                 didFinishProcessingPhoto photo: AVCapturePhoto,
+                                 error: Error?) {
+        if let error {
+            logger.error("撮影に失敗しました: \(error.localizedDescription)")
+            return
+        }
+        // 802でフィルター適用・フォトライブラリへの保存を実装する
+        logger.info("撮影完了")
     }
 }
 

@@ -243,11 +243,43 @@
         - focus/exposureの実際の合焦位置は実機確認項目としてPR本文に明記する。
 
 ## Chapter 8
-    - [ ] `NSPhotoLibraryAddUsageDescription`の`InfoPilist`への追加
-        - 「撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。」
-    - [ ] デバイスの向きに合わせてフィルタされた画像を回転させて保存
-    - 最後に...
-        - [ ] PrivacyInfoの追加
-            - 全ソースをチェックし必要な項目を記述する
+    - シャッターボタンタップ時の静止画撮影、フィルター適用、フォトライブラリへの保存を実装する
+    - MTKView表示との厳密な一致は求めない（「だいたいこんな感じ」で十分）
+    - [x] 801 AVCapturePhotoOutputでシャッター撮影
+        - `AVCaptureSession`に`AVCapturePhotoOutput`を追加する
+        - シャッターボタンタップ時に`capturePhoto(with:delegate:)`を呼ぶ
+        - `AVCapturePhotoCaptureDelegate`を実装する
+        - `AVCapturePhotoSettings`の`.flashMode`に現在のFlashMode選択値を反映する
+        - FlashModeの動作は実機で確認する（Auto / On / Off）
+    - [ ] 802 フォトライブラリへの保存
+        - `NSPhotoLibraryAddUsageDescription`を`Info.plist`に追加する
+            - 「撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。」
+        - `PHPhotoLibrary`の使用許可を取得する
+        - フィルター適用済み`CIImage`をJPEGまたはHEICで保存する
+        - シャッター音は`AudioServicesPlaySystemSound(1108)`で再生する
+    - [ ] 803 撮影画像にフィルターパイプラインを適用
+        - `AVCapturePhoto`から`CIImage`を生成する
+        - 撮影時点の`FilterPipeline.Snapshot`を使ってフィルターを適用する
+        - MTKView表示との厳密な一致は求めない
+    - [ ] 804 画像の向き——EXIFメタデータで記録
+        - `AVCapturePhoto`から向き情報を取得する
+        - `CIImage`書き出し時に`CGImagePropertyOrientation`としてメタデータに付与する
+        - ピクセルを実際に回転させる処理は行わない
+    - [ ] 805 PrivacyInfo.xcprivacyの追加
+        - 全ソースファイルを読み込み、使用しているプライバシー関連APIを抽出する
+        - 必要な項目を`PrivacyInfo.xcprivacy`に記述する
+        - 少なくとも以下が対象になると想定する:
+            - `NSPrivacyAccessedAPICategoryUserDefaults`（UserDefaults使用のため）
+            - カメラ・フォトライブラリはInfo.plistのUsageDescriptionで対応済みのため対象外の可能性あり
+        - AppStoreへの申請は行わないが、申請時に必要な状態を整えておく
+    - 受け入れ条件:
+        - シャッターボタンをタップするとフォトライブラリに画像が保存される
+        - 保存画像にフィルターが適用されている
+        - 端末の向きに合わせた向きで画像が保存される（EXIFで記録）
+        - `xcodebuild`でビルドが成功する
+        - 実機でフォトライブラリへの保存を確認する
+        - FlashModeが静止画撮影に反映される（実機確認）
+    - このChapterではやらないこと:
+        - フィルターパラメータの解像度補正（目視確認で許容範囲か判断する）
 
 ## Chapter 9
