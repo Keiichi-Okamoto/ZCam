@@ -304,7 +304,6 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
             PHAssetChangeRequest.creationRequestForAsset(from: uiImage)
         }, completionHandler: { success, error in
             if success {
-                AudioServicesPlaySystemSound(1108)
                 logger.info("フォトライブラリへの保存完了")
             } else if let error {
                 logger.error("フォトライブラリへの保存失敗: \(error.localizedDescription)")
