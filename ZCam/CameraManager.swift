@@ -34,7 +34,8 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
     nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
     private let ciContext = CIContext()
-    // uniqueID → Snapshot の辞書で管理することで複数撮影リクエストの混在を防ぐ
+    // uniqueID → Snapshot の辞書。sessionQueue とデリゲートスレッドから並行アクセスされるため lock で保護する
+    private let snapshotsLock = NSLock()
     nonisolated(unsafe) private var pendingFilterSnapshots: [Int64: FilterPipeline.Snapshot] = [:]
 
     override init() {
@@ -265,7 +266,7 @@ final class CameraManager: NSObject, ObservableObject {
                 settings.flashMode = mode
             }
             // capturePhoto 呼び出し直前に登録することで snapshot と uniqueID の対応を保証
-            pendingFilterSnapshots[settings.uniqueID] = snapshot
+            snapshotsLock.withLock { pendingFilterSnapshots[settings.uniqueID] = snapshot }
             photoOutput.capturePhoto(with: settings, delegate: self)
         }
         #endif
@@ -276,6 +277,9 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
     nonisolated func photoOutput(_ output: AVCapturePhotoOutput,
                                  didFinishProcessingPhoto photo: AVCapturePhoto,
                                  error: Error?) {
+        let uniqueID = photo.resolvedSettings.uniqueID
+        defer { snapshotsLock.withLock { pendingFilterSnapshots[uniqueID] = nil } }
+
         if let error {
             logger.error("撮影に失敗しました: \(error.localizedDescription)")
             return
@@ -286,9 +290,7 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
             return
         }
 
-        let uniqueID = photo.resolvedSettings.uniqueID
-        let snapshot = pendingFilterSnapshots[uniqueID]
-        pendingFilterSnapshots[uniqueID] = nil
+        let snapshot = snapshotsLock.withLock { pendingFilterSnapshots[uniqueID] }
         let filtered = snapshot.map { Self.applyFilters(to: rawImage, snapshot: $0) } ?? rawImage
 
         guard let cgImage = ciContext.createCGImage(filtered, from: filtered.extent) else {
