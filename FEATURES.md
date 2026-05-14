@@ -265,7 +265,7 @@
         - `AVCapturePhoto`から向き情報を取得する
         - `CIImage`書き出し時に`CGImagePropertyOrientation`としてメタデータに付与する
         - ピクセルを実際に回転させる処理は行わない
-    - [ ] 805 PrivacyInfo.xcprivacyの追加
+    - [x] 805 PrivacyInfo.xcprivacyの追加
         - 全ソースファイルを読み込み、使用しているプライバシー関連APIを抽出する
         - 必要な項目を`PrivacyInfo.xcprivacy`に記述する
         - 少なくとも以下が対象になると想定する:
