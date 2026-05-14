@@ -34,7 +34,8 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
     nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
     private let ciContext = CIContext()
-    nonisolated(unsafe) private var pendingFilterSnapshot: FilterPipeline.Snapshot?
+    // uniqueID → Snapshot の辞書で管理することで複数撮影リクエストの混在を防ぐ
+    nonisolated(unsafe) private var pendingFilterSnapshots: [Int64: FilterPipeline.Snapshot] = [:]
 
     override init() {
         super.init()
@@ -252,7 +253,7 @@ final class CameraManager: NSObject, ObservableObject {
         #if targetEnvironment(simulator)
         AudioServicesPlaySystemSound(1108)
         #else
-        pendingFilterSnapshot = filterSnapshot
+        let snapshot = filterSnapshot
         let mode = flashMode
         sessionQueue.async { [photoOutput] in
             guard photoOutput.connection(with: .video) != nil else {
@@ -263,6 +264,8 @@ final class CameraManager: NSObject, ObservableObject {
             if photoOutput.supportedFlashModes.contains(mode) {
                 settings.flashMode = mode
             }
+            // capturePhoto 呼び出し直前に登録することで snapshot と uniqueID の対応を保証
+            pendingFilterSnapshots[settings.uniqueID] = snapshot
             photoOutput.capturePhoto(with: settings, delegate: self)
         }
         #endif
@@ -283,7 +286,9 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
             return
         }
 
-        let snapshot = pendingFilterSnapshot
+        let uniqueID = photo.resolvedSettings.uniqueID
+        let snapshot = pendingFilterSnapshots[uniqueID]
+        pendingFilterSnapshots[uniqueID] = nil
         let filtered = snapshot.map { Self.applyFilters(to: rawImage, snapshot: $0) } ?? rawImage
 
         guard let cgImage = ciContext.createCGImage(filtered, from: filtered.extent) else {
