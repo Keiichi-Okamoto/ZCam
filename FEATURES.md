@@ -251,7 +251,7 @@
         - `AVCapturePhotoCaptureDelegate`を実装する
         - `AVCapturePhotoSettings`の`.flashMode`に現在のFlashMode選択値を反映する
         - FlashModeの動作は実機で確認する（Auto / On / Off）
-    - [ ] 802 フォトライブラリへの保存
+    - [x] 802 フォトライブラリへの保存
         - `NSPhotoLibraryAddUsageDescription`を`Info.plist`に追加する
             - 「撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。」
         - `PHPhotoLibrary`の使用許可を取得する

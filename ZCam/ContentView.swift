@@ -44,7 +44,7 @@ struct ContentView: View {
                                 isParameterPanelOpen: $isParameterPanelOpen)
                     ShutterButtonView(viewSize: proxy.size,
                                       orientationObserver: orientationObserver,
-                                      onShutter: { cameraManager.capturePhoto() },
+                                      onShutter: { cameraManager.capturePhoto(filterSnapshot: filterPipeline.snapshot) },
                                       isEnabled: cameraManager.isSessionReady)
                     SliderView(viewSize: proxy.size,
                                cameraManager: cameraManager,

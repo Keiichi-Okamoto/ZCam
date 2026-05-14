@@ -3,6 +3,7 @@ import AudioToolbox
 import Combine
 import CoreImage
 import OSLog
+import Photos
 import UIKit
 
 nonisolated private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ZCam", category: "CameraManager")
@@ -31,6 +32,8 @@ final class CameraManager: NSObject, ObservableObject {
     // session と同様に sessionQueue 上でのみ操作するため nonisolated(unsafe) で宣言
     nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
     nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
+    nonisolated(unsafe) private let ciContext = CIContext()
+    nonisolated(unsafe) private var pendingFilterSnapshot: FilterPipeline.Snapshot?
 
     override init() {
         super.init()
@@ -48,14 +51,17 @@ final class CameraManager: NSObject, ObservableObject {
         if authorizationStatus == .authorized {
             await configure()
             start()
-            return
+        } else {
+            let granted = await AVCaptureDevice.requestAccess(for: .video)
+            authorizationStatus = granted ? .authorized : .denied
+            if granted {
+                await configure()
+                start()
+            }
         }
-        let granted = await AVCaptureDevice.requestAccess(for: .video)
-        authorizationStatus = granted ? .authorized : .denied
-        if granted {
-            await configure()
-            start()
-        }
+        #if !targetEnvironment(simulator)
+        _ = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        #endif
     }
 
     private func configure() async {
@@ -243,10 +249,11 @@ final class CameraManager: NSObject, ObservableObject {
         setFocusPoint(CGPoint(x: 0.5, y: 0.5))
     }
 
-    func capturePhoto() {
+    func capturePhoto(filterSnapshot: FilterPipeline.Snapshot) {
         #if targetEnvironment(simulator)
         AudioServicesPlaySystemSound(1108)
         #else
+        pendingFilterSnapshot = filterSnapshot
         let mode = flashMode
         sessionQueue.async { [photoOutput] in
             guard photoOutput.connection(with: .video) != nil else {
@@ -278,8 +285,52 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
             logger.error("撮影に失敗しました: \(error.localizedDescription)")
             return
         }
-        // 802でフィルター適用・フォトライブラリへの保存を実装する
-        logger.info("撮影完了")
+        guard let data = photo.fileDataRepresentation(),
+              let rawImage = CIImage(data: data) else {
+            logger.error("撮影データの取得に失敗")
+            return
+        }
+
+        let snapshot = pendingFilterSnapshot
+        let filtered = snapshot.map { Self.applyFilters(to: rawImage, snapshot: $0) } ?? rawImage
+
+        guard let cgImage = ciContext.createCGImage(filtered, from: filtered.extent) else {
+            logger.error("CGImage の生成に失敗")
+            return
+        }
+        let uiImage = UIImage(cgImage: cgImage)
+
+        PHPhotoLibrary.shared().performChanges({
+            PHAssetChangeRequest.creationRequestForAsset(from: uiImage)
+        }, completionHandler: { success, error in
+            if success {
+                AudioServicesPlaySystemSound(1108)
+                logger.info("フォトライブラリへの保存完了")
+            } else if let error {
+                logger.error("フォトライブラリへの保存失敗: \(error.localizedDescription)")
+            }
+        })
+    }
+
+    nonisolated private static func applyFilters(to image: CIImage,
+                                                 snapshot: FilterPipeline.Snapshot) -> CIImage {
+        guard let posterize = CIFilter(name: "CIColorPosterize"),
+              let lineOverlay = CIFilter(name: "CILineOverlay"),
+              let multiply = CIFilter(name: "CIMultiplyBlendMode") else {
+            return image
+        }
+        posterize.setValue(image, forKey: kCIInputImageKey)
+        posterize.setValue(snapshot.inputLevels, forKey: "inputLevels")
+        guard let posterized = posterize.outputImage else { return image }
+
+        lineOverlay.setValue(image, forKey: kCIInputImageKey)
+        lineOverlay.setValue(snapshot.inputEdgeIntensity, forKey: "inputEdgeIntensity")
+        lineOverlay.setValue(snapshot.inputThreshold, forKey: "inputThreshold")
+        guard let lines = lineOverlay.outputImage else { return posterized }
+
+        multiply.setValue(posterized, forKey: kCIInputImageKey)
+        multiply.setValue(lines, forKey: kCIInputBackgroundImageKey)
+        return multiply.outputImage ?? posterized
     }
 }
 

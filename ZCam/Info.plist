@@ -42,6 +42,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>auto-focus-camera</string>
