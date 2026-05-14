@@ -69,6 +69,12 @@ struct ContentView: View {
                 .task {
                     await cameraManager.requestAccess()
                 }
+                .alert("フラッシュはオフです",
+                       isPresented: $cameraManager.showsFlashUnavailableAlert) {
+                    Button("OK") {}
+                } message: {
+                    Text("iPhoneの本体温度が下がるまでフラッシュは使用できません。")
+                }
             }
         }
         .ignoresSafeArea()

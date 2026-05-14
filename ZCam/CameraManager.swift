@@ -22,6 +22,7 @@ final class CameraManager: NSObject, ObservableObject {
 
     @Published var flashMode: AVCaptureDevice.FlashMode = .auto
     @Published var isSessionReady: Bool = false
+    @Published var showsFlashUnavailableAlert: Bool = false
 
     private var currentInput: AVCaptureDeviceInput?
     private var hasUltraWide: Bool = false
@@ -253,6 +254,10 @@ final class CameraManager: NSObject, ObservableObject {
         #if targetEnvironment(simulator)
         AudioServicesPlaySystemSound(1108)
         #else
+        if flashMode != .off, currentInput?.device.isFlashAvailable == false {
+            showsFlashUnavailableAlert = true
+            return
+        }
         pendingFilterSnapshot = filterSnapshot
         let mode = flashMode
         sessionQueue.async { [photoOutput] in
