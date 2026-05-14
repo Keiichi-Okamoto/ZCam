@@ -60,9 +60,7 @@ final class CameraManager: NSObject, ObservableObject {
                 start()
             }
         }
-        #if !targetEnvironment(simulator)
         _ = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
-        #endif
     }
 
     private func configure() async {
