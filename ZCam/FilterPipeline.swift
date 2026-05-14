@@ -83,7 +83,7 @@ final class FilterPipeline: ObservableObject {
     }
 
     private static func stored(_ key: String, default fallback: Float) -> Float {
-        let ud = UserDefaults.standard
-        return ud.object(forKey: key) != nil ? ud.float(forKey: key) : fallback
+        let defaults = UserDefaults.standard
+        return defaults.object(forKey: key) != nil ? defaults.float(forKey: key) : fallback
     }
 }

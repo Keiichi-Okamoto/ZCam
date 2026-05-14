@@ -12,7 +12,7 @@ struct CameraPreviewView: UIViewRepresentable {
     #endif
 
     func makeUIView(context: Context) -> UIView {
-        let view = CenterReportingMTKView()
+        let view = MTKView()
         view.backgroundColor = .black
         view.framebufferOnly = false
         view.enableSetNeedsDisplay = false
@@ -131,29 +131,6 @@ struct CameraPreviewView: UIViewRepresentable {
 
         private func approximatelyEqual(_ lhs: CGPoint, _ rhs: CGPoint) -> Bool {
             abs(lhs.x - rhs.x) < 0.0001 && abs(lhs.y - rhs.y) < 0.0001
-        }
-    }
-
-    final class CenterReportingMTKView: MTKView {
-        var observation1: NSKeyValueObservation?
-        var observation2: NSKeyValueObservation?
-
-        convenience init() {
-            self.init(frame: CGRect(x: 0, y: 0, width: 0, height: 0), device: nil)
-            observation1 = observe(\.frame, options: [.new]) { _, change in
-                print("\(#function) \(change.newValue?.width ?? -1) \(change.newValue?.height ?? -1)")
-            }
-            observation2 = observe(\.bounds, options: [.new]) { _, change in
-                print("\(#function) \(change.newValue?.width ?? -1) \(change.newValue?.height ?? -1)")
-            }
-        }
-
-        override init(frame frameRect: CGRect, device: (any MTLDevice)?) {
-            super.init(frame: frameRect, device: device)
-        }
-
-        required init(coder: NSCoder) {
-            super.init(coder: coder)
         }
     }
 }
