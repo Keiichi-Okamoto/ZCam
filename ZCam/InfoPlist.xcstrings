@@ -29,6 +29,18 @@
           }
         }
       }
+    },
+    "NSPhotoLibraryAddUsageDescription" : {
+      "comment" : "Privacy - Photo Library Additions Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "撮影した写真を保存するためにフォトライブラリへのアクセスが必要です。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
