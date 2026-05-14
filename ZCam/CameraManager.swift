@@ -297,10 +297,24 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
             logger.error("CGImage の生成に失敗")
             return
         }
-        let uiImage = UIImage(cgImage: cgImage)
+
+        let mutableData = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            mutableData, "public.jpeg" as CFString, 1, nil
+        ) else {
+            logger.error("CGImageDestination の生成に失敗")
+            return
+        }
+        CGImageDestinationAddImage(destination, cgImage, photo.metadata as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else {
+            logger.error("JPEG の書き出しに失敗")
+            return
+        }
+        let jpegData = mutableData as Data
 
         PHPhotoLibrary.shared().performChanges({
-            PHAssetChangeRequest.creationRequestForAsset(from: uiImage)
+            let request = PHAssetCreationRequest.forAsset()
+            request.addResource(with: .photo, data: jpegData, options: nil)
         }, completionHandler: { success, error in
             if success {
                 logger.info("フォトライブラリへの保存完了")
