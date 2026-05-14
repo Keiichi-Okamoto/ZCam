@@ -44,7 +44,8 @@ struct ContentView: View {
                                 isParameterPanelOpen: $isParameterPanelOpen)
                     ShutterButtonView(viewSize: proxy.size,
                                       orientationObserver: orientationObserver,
-                                      onShutter: { cameraManager.capturePhoto() })
+                                      onShutter: { cameraManager.capturePhoto() },
+                                      isEnabled: cameraManager.isSessionReady)
                     SliderView(viewSize: proxy.size,
                                cameraManager: cameraManager,
                                orientationObserver: orientationObserver)
@@ -284,11 +285,13 @@ struct ContentView: View {
         let viewSize: CGSize
         @ObservedObject var orientationObserver: OrientationObserver
         let onShutter: () -> Void
+        let isEnabled: Bool
 
         var body: some View {
             HStack(alignment: .center) {
                 ShutterButton(action: onShutter)
                     .offset(shutterButtonOffset)
+                    .disabled(!isEnabled)
             }
         }
 

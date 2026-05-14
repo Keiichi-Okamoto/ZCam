@@ -20,6 +20,7 @@ final class CameraManager: NSObject, ObservableObject {
     @Published var sliderMaxZoom: CGFloat = 3.0
 
     @Published var flashMode: AVCaptureDevice.FlashMode = .auto
+    @Published var isSessionReady: Bool = false
 
     private var currentInput: AVCaptureDeviceInput?
     private var hasUltraWide: Bool = false
@@ -125,6 +126,7 @@ final class CameraManager: NSObject, ObservableObject {
         sliderMinZoom = result.1 ? 0.5 : 1.0
         sliderMaxZoom = 3.0
         sliderValue = 1.0
+        isSessionReady = result.0 != nil
     }
 
     private nonisolated static func preferredBackCamera() -> AVCaptureDevice? {
@@ -178,6 +180,7 @@ final class CameraManager: NSObject, ObservableObject {
             return
         }
         frameStore.update(CIImage(cgImage: cgImage))
+        isSessionReady = true
     }
     #endif
 
@@ -246,6 +249,10 @@ final class CameraManager: NSObject, ObservableObject {
         #else
         let mode = flashMode
         sessionQueue.async { [photoOutput] in
+            guard photoOutput.connection(with: .video) != nil else {
+                logger.warning("撮影スキップ: photoOutput がセッションに未接続")
+                return
+            }
             let settings = AVCapturePhotoSettings()
             if photoOutput.supportedFlashModes.contains(mode) {
                 settings.flashMode = mode
