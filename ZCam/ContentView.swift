@@ -43,7 +43,9 @@ struct ContentView: View {
                                 isFlashMenuOpen: $isFlashMenuOpen,
                                 isParameterPanelOpen: $isParameterPanelOpen)
                     ShutterButtonView(viewSize: proxy.size,
-                                      orientationObserver: orientationObserver)
+                                      orientationObserver: orientationObserver,
+                                      onShutter: { cameraManager.capturePhoto() },
+                                      isEnabled: cameraManager.isSessionReady)
                     SliderView(viewSize: proxy.size,
                                cameraManager: cameraManager,
                                orientationObserver: orientationObserver)
@@ -282,11 +284,14 @@ struct ContentView: View {
     private struct ShutterButtonView: View {
         let viewSize: CGSize
         @ObservedObject var orientationObserver: OrientationObserver
+        let onShutter: () -> Void
+        let isEnabled: Bool
 
         var body: some View {
             HStack(alignment: .center) {
-                ShutterButton()
+                ShutterButton(action: onShutter)
                     .offset(shutterButtonOffset)
+                    .disabled(!isEnabled)
             }
         }
 
@@ -296,15 +301,20 @@ struct ContentView: View {
     }
 
     private struct ShutterButton: View {
+        let action: () -> Void
+
         var body: some View {
-            ZStack {
-                Circle()
-                    .strokeBorder(.white, lineWidth: 3)
-                    .frame(width: 72, height: 72)
-                Circle()
-                    .fill(.white)
-                    .frame(width: 60, height: 60)
+            Button(action: action) {
+                ZStack {
+                    Circle()
+                        .strokeBorder(.white, lineWidth: 3)
+                        .frame(width: 72, height: 72)
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 60, height: 60)
+                }
             }
+            .buttonStyle(.plain)
         }
     }
 

@@ -1,3 +1,4 @@
+import AudioToolbox
 @preconcurrency import AVFoundation
 import Combine
 import CoreImage
@@ -19,6 +20,7 @@ final class CameraManager: NSObject, ObservableObject {
     @Published var sliderMaxZoom: CGFloat = 3.0
 
     @Published var flashMode: AVCaptureDevice.FlashMode = .auto
+    @Published var isSessionReady: Bool = false
 
     private var currentInput: AVCaptureDeviceInput?
     private var hasUltraWide: Bool = false
@@ -26,7 +28,9 @@ final class CameraManager: NSObject, ObservableObject {
     // AVCaptureSession の操作は Apple 推奨の専用シリアルキューで実行する
     private let sessionQueue = DispatchQueue(label: "com.example.ZCam.sessionQueue")
     private let videoOutputQueue = DispatchQueue(label: "com.example.ZCam.videoOutputQueue")
-    private let videoOutput = AVCaptureVideoDataOutput()
+    // session と同様に sessionQueue 上でのみ操作するため nonisolated(unsafe) で宣言
+    nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
+    nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
 
     override init() {
         super.init()
@@ -56,7 +60,7 @@ final class CameraManager: NSObject, ObservableObject {
 
     private func configure() async {
         let result: (AVCaptureDeviceInput?, Bool) = await withCheckedContinuation { continuation in
-            sessionQueue.async { [session, videoOutput, videoOutputQueue] in
+            sessionQueue.async { [session, videoOutput, videoOutputQueue, photoOutput] in
                 guard let device = Self.preferredBackCamera() else {
                     logger.error("背面カメラが見つかりません")
                     continuation.resume(returning: (nil, false))
@@ -85,6 +89,12 @@ final class CameraManager: NSObject, ObservableObject {
                         return
                     }
                     session.addOutput(videoOutput)
+
+                    #if !targetEnvironment(simulator)
+                    if session.canAddOutput(photoOutput) {
+                        session.addOutput(photoOutput)
+                    }
+                    #endif
 
                     if let connection = videoOutput.connection(with: .video) {
                         if connection.isVideoRotationAngleSupported(90) {
@@ -116,6 +126,7 @@ final class CameraManager: NSObject, ObservableObject {
         sliderMinZoom = result.1 ? 0.5 : 1.0
         sliderMaxZoom = 3.0
         sliderValue = 1.0
+        isSessionReady = result.0 != nil
     }
 
     private nonisolated static func preferredBackCamera() -> AVCaptureDevice? {
@@ -169,6 +180,7 @@ final class CameraManager: NSObject, ObservableObject {
             return
         }
         frameStore.update(CIImage(cgImage: cgImage))
+        isSessionReady = true
     }
     #endif
 
@@ -231,11 +243,43 @@ final class CameraManager: NSObject, ObservableObject {
         setFocusPoint(CGPoint(x: 0.5, y: 0.5))
     }
 
+    func capturePhoto() {
+        #if targetEnvironment(simulator)
+        AudioServicesPlaySystemSound(1108)
+        #else
+        let mode = flashMode
+        sessionQueue.async { [photoOutput] in
+            guard photoOutput.connection(with: .video) != nil else {
+                logger.warning("撮影スキップ: photoOutput がセッションに未接続")
+                return
+            }
+            let settings = AVCapturePhotoSettings()
+            if photoOutput.supportedFlashModes.contains(mode) {
+                settings.flashMode = mode
+            }
+            photoOutput.capturePhoto(with: settings, delegate: self)
+        }
+        #endif
+    }
+
     func stop() {
         guard session.isRunning else { return }
         sessionQueue.async { [session] in
             session.stopRunning()
         }
+    }
+}
+
+extension CameraManager: AVCapturePhotoCaptureDelegate {
+    nonisolated func photoOutput(_ output: AVCapturePhotoOutput,
+                                 didFinishProcessingPhoto photo: AVCapturePhoto,
+                                 error: Error?) {
+        if let error {
+            logger.error("撮影に失敗しました: \(error.localizedDescription)")
+            return
+        }
+        // 802でフィルター適用・フォトライブラリへの保存を実装する
+        logger.info("撮影完了")
     }
 }
 
