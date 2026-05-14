@@ -251,13 +251,13 @@ final class CameraManager: NSObject, ObservableObject {
     }
 
     func capturePhoto(filterSnapshot: FilterPipeline.Snapshot) {
-        #if targetEnvironment(simulator)
-        AudioServicesPlaySystemSound(1108)
-        #else
-        if flashMode != .off, currentInput?.device.isFlashAvailable == false {
+        if flashMode != .off, currentInput?.device.isFlashAvailable != true {
             showsFlashUnavailableAlert = true
             return
         }
+        #if targetEnvironment(simulator)
+        AudioServicesPlaySystemSound(1108)
+        #else
         pendingFilterSnapshot = filterSnapshot
         let mode = flashMode
         sessionQueue.async { [photoOutput] in
