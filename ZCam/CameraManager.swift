@@ -34,9 +34,10 @@ final class CameraManager: NSObject, ObservableObject {
     nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
     nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
     private let ciContext = CIContext()
-    // uniqueID → Snapshot の辞書。sessionQueue とデリゲートスレッドから並行アクセスされるため lock で保護する
+    // uniqueID → Snapshot / Orientation の辞書。sessionQueue とデリゲートスレッドから並行アクセスされるため lock で保護する
     private let snapshotsLock = NSLock()
     nonisolated(unsafe) private var pendingFilterSnapshots: [Int64: FilterPipeline.Snapshot] = [:]
+    nonisolated(unsafe) private var pendingOrientations: [Int64: CGImagePropertyOrientation] = [:]
 
     override init() {
         super.init()
@@ -256,6 +257,7 @@ final class CameraManager: NSObject, ObservableObject {
         #else
         let snapshot = filterSnapshot
         let mode = flashMode
+        let orientation = UIDevice.current.orientation.cgImagePropertyOrientation
         sessionQueue.async { [photoOutput, self] in
             guard photoOutput.connection(with: .video) != nil else {
                 logger.warning("撮影スキップ: photoOutput がセッションに未接続")
@@ -265,8 +267,11 @@ final class CameraManager: NSObject, ObservableObject {
             if photoOutput.supportedFlashModes.contains(mode) {
                 settings.flashMode = mode
             }
-            // capturePhoto 呼び出し直前に登録することで snapshot と uniqueID の対応を保証
-            snapshotsLock.withLock { pendingFilterSnapshots[settings.uniqueID] = snapshot }
+            // capturePhoto 呼び出し直前に登録することで snapshot / orientation と uniqueID の対応を保証
+            snapshotsLock.withLock {
+                pendingFilterSnapshots[settings.uniqueID] = snapshot
+                pendingOrientations[settings.uniqueID] = orientation
+            }
             photoOutput.capturePhoto(with: settings, delegate: self)
         }
         #endif
@@ -278,7 +283,10 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
                                  didFinishProcessingPhoto photo: AVCapturePhoto,
                                  error: Error?) {
         let uniqueID = photo.resolvedSettings.uniqueID
-        defer { snapshotsLock.withLock { pendingFilterSnapshots[uniqueID] = nil } }
+        defer { snapshotsLock.withLock {
+            pendingFilterSnapshots[uniqueID] = nil
+            pendingOrientations[uniqueID] = nil
+        }}
 
         if let error {
             logger.error("撮影に失敗しました: \(error.localizedDescription)")
@@ -290,17 +298,35 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
             return
         }
 
-        let snapshot = snapshotsLock.withLock { pendingFilterSnapshots[uniqueID] }
+        let (snapshot, orientation) = snapshotsLock.withLock {
+            (pendingFilterSnapshots[uniqueID], pendingOrientations[uniqueID] ?? .right)
+        }
         let filtered = snapshot.map { Self.applyFilters(to: rawImage, snapshot: $0) } ?? rawImage
 
         guard let cgImage = ciContext.createCGImage(filtered, from: filtered.extent) else {
             logger.error("CGImage の生成に失敗")
             return
         }
-        let uiImage = UIImage(cgImage: cgImage)
+
+        let mutableData = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            mutableData, "public.jpeg" as CFString, 1, nil
+        ) else {
+            logger.error("CGImageDestination の生成に失敗")
+            return
+        }
+        var metadata = photo.metadata
+        metadata[kCGImagePropertyOrientation as String] = orientation.rawValue
+        CGImageDestinationAddImage(destination, cgImage, metadata as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else {
+            logger.error("JPEG の書き出しに失敗")
+            return
+        }
+        let jpegData = mutableData as Data
 
         PHPhotoLibrary.shared().performChanges({
-            PHAssetChangeRequest.creationRequestForAsset(from: uiImage)
+            let request = PHAssetCreationRequest.forAsset()
+            request.addResource(with: .photo, data: jpegData, options: nil)
         }, completionHandler: { success, error in
             if success {
                 logger.info("フォトライブラリへの保存完了")
@@ -329,6 +355,19 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
         multiply.setValue(posterized, forKey: kCIInputImageKey)
         multiply.setValue(lines, forKey: kCIInputBackgroundImageKey)
         return multiply.outputImage ?? posterized
+    }
+}
+
+private extension UIDeviceOrientation {
+    // iPhone背面カメラのセンサー基準での CGImagePropertyOrientation に変換する
+    var cgImagePropertyOrientation: CGImagePropertyOrientation {
+        switch self {
+        case .portrait:           return .right
+        case .portraitUpsideDown: return .left
+        case .landscapeLeft:      return .up
+        case .landscapeRight:     return .down
+        default:                  return .right
+        }
     }
 }
 

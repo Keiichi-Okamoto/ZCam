@@ -257,11 +257,11 @@
         - `PHPhotoLibrary`の使用許可を取得する
         - フィルター適用済み`CIImage`をJPEGまたはHEICで保存する
         - シャッター音は`AudioServicesPlaySystemSound(1108)`で再生する
-    - [ ] 803 撮影画像にフィルターパイプラインを適用
-        - `AVCapturePhoto`から`CIImage`を生成する
-        - 撮影時点の`FilterPipeline.Snapshot`を使ってフィルターを適用する
-        - MTKView表示との厳密な一致は求めない
-    - [ ] 804 画像の向き——EXIFメタデータで記録
+    - [x] 803 撮影画像にフィルターパイプラインを適用
+        - 802の実装で既にフィルター適用済み・パラメータ調整も写真に反映されることを実機確認
+        - MTKView表示との厳密な一致は求めない（実機確認で許容範囲と判断）
+        - 個別PR不要・スキップ
+    - [x] 804 画像の向き——EXIFメタデータで記録
         - `AVCapturePhoto`から向き情報を取得する
         - `CIImage`書き出し時に`CGImagePropertyOrientation`としてメタデータに付与する
         - ピクセルを実際に回転させる処理は行わない
