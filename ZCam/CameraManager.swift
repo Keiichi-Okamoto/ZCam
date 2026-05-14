@@ -27,7 +27,8 @@ final class CameraManager: NSObject, ObservableObject {
     // AVCaptureSession の操作は Apple 推奨の専用シリアルキューで実行する
     private let sessionQueue = DispatchQueue(label: "com.example.ZCam.sessionQueue")
     private let videoOutputQueue = DispatchQueue(label: "com.example.ZCam.videoOutputQueue")
-    private let videoOutput = AVCaptureVideoDataOutput()
+    // session と同様に sessionQueue 上でのみ操作するため nonisolated(unsafe) で宣言
+    nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
     nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
 
     override init() {
