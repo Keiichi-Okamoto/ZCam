@@ -33,7 +33,7 @@ final class CameraManager: NSObject, ObservableObject {
     // session と同様に sessionQueue 上でのみ操作するため nonisolated(unsafe) で宣言
     nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
     nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
-    nonisolated(unsafe) private let ciContext = CIContext()
+    private let ciContext = CIContext()
     nonisolated(unsafe) private var pendingFilterSnapshot: FilterPipeline.Snapshot?
 
     override init() {

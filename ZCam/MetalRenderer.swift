@@ -54,11 +54,11 @@ final class MetalRenderer: NSObject, MTKViewDelegate {
     #if targetEnvironment(simulator)
     private func applyZoom(image: CIImage, in bounds: CGRect) -> CIImage {
         guard zoomFactor != 1.0 else { return image }
-        let tx = bounds.midX * (1 - zoomFactor)
-        let ty = bounds.midY * (1 - zoomFactor)
+        let offsetX = bounds.midX * (1 - zoomFactor)
+        let offsetY = bounds.midY * (1 - zoomFactor)
         return image
             .transformed(by: CGAffineTransform(scaleX: zoomFactor, y: zoomFactor)
-                .translatedBy(x: tx / zoomFactor, y: ty / zoomFactor))
+                .translatedBy(x: offsetX / zoomFactor, y: offsetY / zoomFactor))
             .cropped(to: bounds)
     }
     #endif
