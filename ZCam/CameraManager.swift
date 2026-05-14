@@ -244,10 +244,6 @@ final class CameraManager: NSObject, ObservableObject {
         }
     }
 
-    func resetFocusToCenter() {
-        setFocusPoint(CGPoint(x: 0.5, y: 0.5))
-    }
-
     func capturePhoto(filterSnapshot: FilterPipeline.Snapshot) {
         if flashMode != .off, currentInput?.device.isFlashAvailable != true {
             showsFlashUnavailableAlert = true
@@ -270,13 +266,6 @@ final class CameraManager: NSObject, ObservableObject {
             photoOutput.capturePhoto(with: settings, delegate: self)
         }
         #endif
-    }
-
-    func stop() {
-        guard session.isRunning else { return }
-        sessionQueue.async { [session] in
-            session.stopRunning()
-        }
     }
 }
 
