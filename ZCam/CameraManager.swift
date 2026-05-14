@@ -256,7 +256,7 @@ final class CameraManager: NSObject, ObservableObject {
         #else
         let snapshot = filterSnapshot
         let mode = flashMode
-        sessionQueue.async { [photoOutput] in
+        sessionQueue.async { [photoOutput, self] in
             guard photoOutput.connection(with: .video) != nil else {
                 logger.warning("撮影スキップ: photoOutput がセッションに未接続")
                 return
